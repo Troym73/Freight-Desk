@@ -297,9 +297,22 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
         <!-- Load Details -->
         <div class="section-box">
           <h3><i class="ti ti-truck"></i>Load Details</h3>
+          <div class="form-grid" style="margin-bottom:10px">
+            <div class="field">
+              <label>Pickup Location (City, State)</label>
+              <input type="text" id="loc-pu" placeholder="e.g. Chicago, IL">
+            </div>
+            <div class="field">
+              <label>Delivery Location (City, State)</label>
+              <input type="text" id="loc-del" placeholder="e.g. Nashville, TN">
+            </div>
+          </div>
+          <button class="calc-btn" onclick="lookupMiles()" id="miles-btn" style="margin-bottom:12px;background:var(--sf3);color:var(--tx);border:0.5px solid var(--bd2)">
+            <i class="ti ti-map-pin"></i>Calculate Mileage
+          </button>
           <div class="form-grid three">
             <div class="field">
-              <label>Total Miles</label>
+              <label>Total Miles <span style="font-size:10px;color:var(--tx3)">(auto-filled or enter manually)</span></label>
               <input type="number" id="miles" placeholder="e.g. 450">
             </div>
             <div class="field">
@@ -813,6 +826,57 @@ function nav(id) {
   if(nb) nb.classList.add('active');
 }
 
+// ── MILEAGE LOOKUP ──
+async function lookupMiles() {
+  const pu = document.getElementById('loc-pu').value.trim();
+  const del = document.getElementById('loc-del').value.trim();
+  if (!pu || !del) { alert('Enter both a pickup and delivery location.'); return; }
+  if (!getKey()) { const k = promptForKey(); if (!k) return; }
+
+  const btn = document.getElementById('miles-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Calculating...';
+  btn.disabled = true;
+
+  const prompt = `A freight broker needs the driving miles between two locations for trucking purposes.
+
+Pickup: ${pu}
+Delivery: ${del}
+
+Respond ONLY with a JSON object, no other text:
+{
+  "miles": 452,
+  "note": "approximate driving miles via major interstates"
+}
+
+Use standard trucking route miles (similar to PC Miler or Google Maps driving distance). Round to nearest whole mile. If locations are unrecognizable, set miles to 0.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 100,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    if (parsed.miles > 0) {
+      document.getElementById('miles').value = parsed.miles;
+    } else {
+      alert('Could not calculate miles — check your city/state entries and try again.');
+    }
+  } catch(e) {
+    alert('Mileage lookup failed. You can enter miles manually.');
+  }
+
+  btn.innerHTML = '<i class="ti ti-map-pin"></i>Calculate Mileage';
+  btn.disabled = false;
+}
+
 // ── RATE CALC ──
 // DAT inputs are TOTAL LOAD dollars, not $/mi
 function getBasis() {
@@ -864,20 +928,29 @@ function autoCalc() {
     return;
   }
 
-  // DAT total is the carrier base — add FSC ($/mi × miles), accessorials, stop charges on top
+  // DAT total is the carrier base — apply equipment multiplier, then add FSC, accessorials, stop charges
   const datTotal = getBasis();
   if(!datTotal) return;
 
+  // Equipment rate multiplier — hotshots run ~50% of full flatbed market rate
+  const equip = document.getElementById('equip').value;
+  let equipMultiplier = 1.0;
+  if (equip.startsWith('Hotshot')) equipMultiplier = 0.50;
+  else if (equip === 'Sprinter Van') equipMultiplier = 0.45;
+  else if (equip.startsWith('Box Truck')) equipMultiplier = 0.55;
+
+  const adjustedDatTotal = datTotal * equipMultiplier;
   const stopCharge = stops * 75;
   const fscTotal = fsc * miles;
-  const carrierBase = datTotal + fscTotal + acc + stopCharge;
+  const carrierBase = adjustedDatTotal + fscTotal + acc + stopCharge;
   const quoteTotal = carrierBase / (1 - marginPct/100);
   const grossMargin = quoteTotal - carrierBase;
 
+  const equipNote = equipMultiplier < 1 ? ' (' + Math.round(equipMultiplier*100) + '% rate adj.)' : '';
   document.getElementById('out-quote').textContent = '$'+quoteTotal.toFixed(2);
-  document.getElementById('out-quote-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total load';
+  document.getElementById('out-quote-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total load' + equipNote;
   document.getElementById('out-carrier').textContent = '$'+carrierBase.toFixed(2);
-  document.getElementById('out-carrier-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total to carrier';
+  document.getElementById('out-carrier-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total to carrier' + equipNote;
   document.getElementById('out-margin').textContent = '$'+grossMargin.toFixed(2);
   document.getElementById('out-margin-pct').textContent = marginPct.toFixed(1)+'% margin';
 }
