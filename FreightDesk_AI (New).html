@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreightDesk AI</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23BA7517'/><text y='24' x='3' font-size='22'>🚛</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--sf:#fff;--sf2:#f0eeea;--sf3:#e6e4df;
+  --bd:rgba(0,0,0,0.09);--bd2:rgba(0,0,0,0.17);
+  --tx:#1a1917;--tx2:#5c5a57;--tx3:#9a9895;
+  --am:#BA7517;--am-lt:#FAEEDA;--am-mid:#FAC775;--am-dk:#854F0B;--am-dp:#412402;
+  --gn:#15803d;--gn-lt:#dcfce7;--gn-dk:#14532d;
+  --rd:#b91c1c;--rd-lt:#fee2e2;
+  --bl:#1d4ed8;--bl-lt:#dbeafe;
+  --r:10px;--rlg:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#181715;--sf:#222020;--sf2:#2b2927;--sf3:#343230;
+  --bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.15);
+  --tx:#f0eeea;--tx2:#a8a5a0;--tx3:#686562;
+  --am-lt:#271b05;--am-mid:#6b4410;
+  --gn-lt:#052e16;--rd-lt:#450a0a;--bl-lt:#1e3a5f;
+}}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sb{width:244px;min-width:244px;background:var(--sf);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto}
+.sb-top{padding:16px 14px 12px;border-bottom:0.5px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--am);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon i{font-size:20px;color:#fff}
+.logo-name{font-size:15px;font-weight:600}
+.logo-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+.online{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--gn);margin-top:7px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;padding:13px 14px 5px}
+.nb{display:flex;align-items:center;gap:9px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--tx2);text-align:left;font-family:inherit;transition:background .12s}
+.nb:hover{background:var(--sf2);color:var(--tx)}
+.nb.active{background:var(--am-lt);color:var(--am-dk);font-weight:500}
+.nb.active i{color:var(--am)}
+.nb i{font-size:17px;color:var(--tx3);min-width:17px}
+.ref{margin:6px 12px;border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.ref-h{padding:7px 11px;font-size:11px;font-weight:600;color:var(--tx2);background:var(--sf2);border-bottom:0.5px solid var(--bd)}
+.ref-r{display:flex;justify-content:space-between;align-items:center;padding:6px 11px;font-size:12px;border-bottom:0.5px solid var(--bd)}
+.ref-r:last-child{border:none}
+.ref-r .rl{color:var(--tx3)}
+.ref-r .rv{font-weight:600;color:var(--tx)}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.view{display:none;flex-direction:column;height:100%;overflow:hidden}
+.view.on{display:flex}
+.vhdr{padding:11px 18px;border-bottom:0.5px solid var(--bd);background:var(--sf);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.vhdr-title{font-size:14px;font-weight:600}
+.badge{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--am-lt);color:var(--am-dk);border:0.5px solid var(--am-mid);margin-left:4px}
+.badge.live{background:var(--gn-lt);color:var(--gn-dk);border-color:var(--gn)}
+
+/* ── CHAT ── */
+#chat-area{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;display:flex;flex-direction:column;gap:3px}
+.msg.u{align-self:flex-end}
+.msg.a{align-self:flex-start}
+.bubble{padding:9px 13px;border-radius:var(--rlg);font-size:13px;line-height:1.6;white-space:pre-wrap}
+.msg.u .bubble{background:var(--am);color:#fff;border-radius:var(--rlg) var(--rlg) 4px var(--rlg)}
+.msg.a .bubble{background:var(--sf2);color:var(--tx);border:0.5px solid var(--bd);border-radius:var(--rlg) var(--rlg) var(--rlg) 4px}
+.msg-time{font-size:11px;color:var(--tx3);padding:0 3px}
+.msg.u .msg-time{text-align:right}
+.typing-wrap{align-self:flex-start}
+.typing{display:inline-flex;align-items:center;gap:5px;padding:11px 15px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--rlg)}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--am);opacity:.5;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 18px 0;flex-shrink:0}
+.chip{padding:5px 12px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:99px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .12s;white-space:nowrap;font-family:inherit}
+.chip:hover{background:var(--am-lt);color:var(--am-dk);border-color:var(--am-mid)}
+.input-row{padding:10px 14px;border-top:0.5px solid var(--bd);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:var(--sf)}
+#user-input{flex:1;resize:none;border:0.5px solid var(--bd2);border-radius:var(--r);padding:8px 12px;font-size:13px;font-family:inherit;background:var(--sf2);color:var(--tx);min-height:36px;max-height:110px;line-height:1.5;outline:none;transition:border .15s}
+#user-input:focus{border-color:var(--am)}
+#send-btn{width:36px;height:36px;border-radius:var(--r);background:var(--am);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#send-btn:hover{background:var(--am-dk)}
+#send-btn i{font-size:16px;color:#fff}
+
+/* ── RATE PANEL ── */
+.rpanel{flex:1;overflow-y:auto;padding:18px}
+.result-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+.rcard{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:14px 16px}
+.rcard.highlight{border-color:var(--am-mid);background:var(--am-lt)}
+.rcard .rc-label{font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.rcard .rc-val{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:-.5px}
+.rcard.highlight .rc-val{color:var(--am)}
+@media(prefers-color-scheme:dark){.rcard .rc-val{color:#f0eeea}.rcard.highlight .rc-val{color:#FAC775}}
+.rcard .rc-sub{font-size:11px;color:var(--tx3);margin-top:3px}
+.rcard.highlight .rc-label{color:var(--am-dk)}
+.section-box{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:16px;margin-bottom:14px}
+.section-box h3{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.section-box h3 i{font-size:16px;color:var(--am)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:var(--am)}
+.field input.highlight-input{border-color:var(--am-mid);background:var(--am-lt)}
+.calc-btn{width:100%;padding:10px;background:var(--am);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.calc-btn:hover{background:var(--am-dk)}
+.dat-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.trend-bar{height:6px;border-radius:99px;background:var(--sf3);margin-top:8px;overflow:hidden}
+.trend-fill{height:100%;border-radius:99px;background:var(--am);transition:width .5s}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500}
+.tag.up{background:var(--gn-lt);color:var(--gn-dk)}
+.tag.dn{background:var(--rd-lt);color:var(--rd)}
+.tag.flat{background:var(--sf3);color:var(--tx2)}
+.ai-result{background:var(--sf2);border:0.5px solid var(--am-mid);border-radius:var(--rlg);padding:14px 16px;margin-bottom:14px;display:none}
+.ai-result.show{display:block}
+.ai-result .ar-head{font-size:12px;font-weight:600;color:var(--am);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ai-result .ar-body{font-size:13px;color:var(--tx);line-height:1.65;white-space:pre-wrap}
+
+/* ── WEIGHT ── */
+.weight-warn{background:var(--rd-lt);border:0.5px solid var(--rd);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--rd);display:none;margin-bottom:12px}
+.weight-warn.show{display:block}
+
+/* ── DOCS ── */
+.doc-list{display:flex;flex-direction:column;gap:8px}
+.doc-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0.5px solid var(--bd);border-radius:var(--rlg);cursor:pointer;background:var(--sf);transition:background .12s}
+.doc-item:hover{background:var(--sf2)}
+.doc-item .di-icon{width:36px;height:36px;background:var(--am-lt);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.doc-item .di-icon i{font-size:18px;color:var(--am)}
+.doc-item .di-text .dt{font-size:13px;font-weight:600;color:var(--tx)}
+.doc-item .di-text .dd{font-size:11px;color:var(--tx3);margin-top:2px}
+.doc-item .di-arr{margin-left:auto;font-size:14px;color:var(--tx3)}
+.tool-result{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.tr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid var(--bd);font-size:13px}
+.tr-row:last-child{border:none}
+.tr-row.highlight{background:var(--am-lt)}
+.tr-row .tr-label{color:var(--tx2)}
+.tr-row .tr-val{font-weight:600;color:var(--tx)}
+.tr-row.highlight .tr-val{color:var(--am-dp)}
+.tr-row.highlight .tr-label{color:var(--am-dk)}
+
+/* ── SETTINGS MODAL ── */
+#modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
+#modal-bg.show{display:flex}
+#modal{background:var(--sf);border-radius:var(--rlg);border:0.5px solid var(--bd2);padding:28px;width:420px;max-width:92vw}
+#modal h2{font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+#modal h2 i{font-size:18px;color:var(--am)}
+#modal p{font-size:13px;color:var(--tx2);margin-bottom:18px;line-height:1.6}
+#modal .field label{font-size:12px;font-weight:500;color:var(--tx2);display:block;margin-bottom:5px}
+#modal .field input{width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:9</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sb">
+    <div class="sb-top">
+      <div class="logo">
+        <div class="logo-icon"><i class="ti ti-truck"></i></div>
+        <div>
+          <div class="logo-name">FreightDesk AI</div>
+          <div class="logo-sub">Broker Assistant</div>
+        </div>
+      </div>
+      <div class="online"><span class="dot"></span>Agent online</div>
+    </div>
+
+    <div class="sl">Tools</div>
+    <button class="nb active" onclick="nav('chat')" id="n-chat"><i class="ti ti-message-circle"></i>AI Assistant</button>
+    <button class="nb" onclick="nav('rate')" id="n-rate"><i class="ti ti-calculator"></i>Rate & Quote</button>
+    <button class="nb" onclick="nav('weight')" id="n-weight"><i class="ti ti-weight"></i>Weight & Payload</button>
+    <button class="nb" onclick="nav('docs')" id="n-docs"><i class="ti ti-tools"></i>Broker Tools</button>
+
+    <div class="sl">Federal Limits</div>
+    <div class="ref">
+      <div class="ref-h"><i class="ti ti-alert-triangle" style="font-size:12px;margin-right:4px"></i>Max GVW</div>
+      <div class="ref-r"><span class="rl">Federal</span><span class="rv">80,000 lbs</span></div>
+      <div class="ref-r"><span class="rl">Steer axle</span><span class="rv">20,000 lbs</span></div>
+      <div class="ref-r"><span class="rl">Drive axle</span><span class="rv">34,000 lbs</span></div>
+      <div class="ref-r"><span class="rl">Tandem</span><span class="rv">34,000 lbs</span></div>
+    </div>
+
+    <div class="sl">Tare Weights</div>
+    <div class="ref">
+      <div class="ref-r"><span class="rl">53' Dry Van</span><span class="rv">~13,500</span></div>
+      <div class="ref-r"><span class="rl">53' Reefer</span><span class="rv">~15,000</span></div>
+      <div class="ref-r"><span class="rl">48' Flatbed</span><span class="rv">~11,500</span></div>
+      <div class="ref-r"><span class="rl">Step Deck 53'</span><span class="rv">~11,000</span></div>
+      <div class="ref-r"><span class="rl">RGN</span><span class="rv">~14,000</span></div>
+      <div class="ref-r"><span class="rl">Hotshot 20'</span><span class="rv">~3,500</span></div>
+      <div class="ref-r"><span class="rl">Hotshot 30'</span><span class="rv">~4,000</span></div>
+      <div class="ref-r"><span class="rl">Hotshot 40'</span><span class="rv">~4,500</span></div>
+      <div class="ref-r"><span class="rl">Sprinter Van</span><span class="rv">~5,500</span></div>
+      <div class="ref-r"><span class="rl">Box Truck 26'</span><span class="rv">~11,000</span></div>
+    </div>
+    <div style="padding:10px 12px 16px;margin-top:auto;border-top:0.5px solid var(--bd)">
+      <button class="nb" style="width:100%;border-radius:var(--r)" onclick="changeKey()"><i class="ti ti-key"></i>API Key Settings</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- ── CHAT VIEW ── -->
+    <div class="view on" id="v-chat">
+      <div class="vhdr">
+        <i class="ti ti-message-circle" style="font-size:17px;color:var(--am)"></i>
+        <span class="vhdr-title">AI Assistant</span>
+        <span class="badge live">Online</span>
+      </div>
+      <div id="chat-area"></div>
+      <div class="chips" id="chip-row">
+        <button class="chip" onclick="chip('What documents are required for a standard dry van load?')">DOT required docs</button>
+        <button class="chip" onclick="chip('Calculate max payload for a day cab + 53ft dry van at 80,000 lbs GVW')">Max payload calc</button>
+        <button class="chip" onclick="chip('What are the HOS rules for a solo OTR driver?')">HOS rules</button>
+        <button class="chip" onclick="chip('What is a Bill of Lading and what must it include?')">Bill of Lading</button>
+        <button class="chip" onclick="chip('What should I watch out for when vetting a new carrier?')">Carrier vetting tips</button>
+      </div>
+      <div class="input-row">
+        <textarea id="user-input" rows="1" placeholder="Ask about rates, compliance, BOL, HOS, carrier vetting..."></textarea>
+        <button id="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+
+    <!-- ── RATE VIEW ── -->
+    <div class="view" id="v-rate">
+      <div class="vhdr">
+        <i class="ti ti-calculator" style="font-size:17px;color:var(--am)"></i>
+        <span class="vhdr-title">Rate & Quote Calculator</span>
+        <span class="badge">DAT Manual Entry</span>
+      </div>
+      <div class="rpanel">
+
+        <!-- AI Result -->
+        <div class="ai-result" id="ai-result">
+          <div class="ar-head"><i class="ti ti-sparkles"></i>FreightDesk AI — Quote Recommendation</div>
+          <div class="ar-body" id="ai-result-body">Analyzing...</div>
+        </div>
+
+        <!-- Output cards -->
+        <div class="result-cards">
+          <div class="rcard highlight">
+            <div class="rc-label">Quote to Shipper</div>
+            <div class="rc-val" id="out-quote">—</div>
+            <div class="rc-sub" id="out-quote-pm">total load · enter miles for $/mi</div>
+          </div>
+          <div class="rcard">
+            <div class="rc-label">Total Truck Pay</div>
+            <div class="rc-val" id="out-carrier">—</div>
+            <div class="rc-sub" id="out-carrier-pm">total to carrier · enter miles for $/mi</div>
+          </div>
+          <div class="rcard">
+            <div class="rc-label">Gross Margin $</div>
+            <div class="rc-val" id="out-margin">—</div>
+            <div class="rc-sub" id="out-margin-pct">—% margin</div>
+          </div>
+        </div>
+
+        <!-- DAT Data Entry -->
+        <div class="section-box">
+          <h3><i class="ti ti-chart-line"></i>DAT RateView — Paste Your Numbers</h3>
+          <div class="dat-row">
+            <div class="field">
+              <label>30-Day (xmkt › reg) Total $</label>
+              <input type="number" id="d30" step="1" placeholder="e.g. 1727">
+            </div>
+            <div class="field">
+              <label>60-Day (xmkt › xmkt) Total $</label>
+              <input type="number" id="d60" step="1" placeholder="e.g. 2014">
+            </div>
+            <div class="field">
+              <label>1-Year (xmkt › xmkt) Total $</label>
+              <input type="number" id="d1y" step="1" placeholder="e.g. 1921">
+            </div>
+            <div class="field">
+              <label>+13M Forecast Total $</label>
+              <input type="number" id="d13m" step="1" placeholder="e.g. 1676">
+            </div>
+          </div>
+          <div id="trend-display" style="margin-top:12px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--tx2)">Market trend</span>
+              <span class="tag" id="trend-tag">—</span>
+            </div>
+            <div class="trend-bar"><div class="trend-fill" id="trend-fill" style="width:50%"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--tx3)">
+              <span>30-day low</span><span id="trend-range">—</span><span>13M high</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Load Details -->
+        <div class="section-box">
+          <h3><i class="ti ti-truck"></i>Load Details</h3>
+          <div class="form-grid three">
+            <div class="field">
+              <label>Total Miles</label>
+              <input type="number" id="miles" placeholder="e.g. 450">
+            </div>
+            <div class="field">
+              <label>Equipment Type</label>
+              <select id="equip">
+                <optgroup label="Dry Van">
+                  <option>Dry Van 53'</option>
+                  <option>Dry Van 48'</option>
+                  <option>Dry Van 45'</option>
+                </optgroup>
+                <optgroup label="Reefer">
+                  <option>Reefer 53'</option>
+                  <option>Reefer 48'</option>
+                </optgroup>
+                <optgroup label="Flatbed">
+                  <option>Flatbed 53'</option>
+                  <option>Flatbed 48'</option>
+                  <option>Flatbed 45'</option>
+                  <option>Flatbed 40'</option>
+                </optgroup>
+                <optgroup label="Step Deck">
+                  <option>Step Deck 53'</option>
+                  <option>Step Deck 48'</option>
+                </optgroup>
+                <optgroup label="RGN / Lowboy">
+                  <option>RGN (Removable Gooseneck)</option>
+                  <option>Lowboy 48'</option>
+                  <option>Lowboy 53'</option>
+                  <option>Double Drop</option>
+                </optgroup>
+                <optgroup label="Hotshot">
+                  <option>Hotshot 20'</option>
+                  <option>Hotshot 30'</option>
+                  <option>Hotshot 40'</option>
+                </optgroup>
+                <optgroup label="Van / Sprinter">
+                  <option>Sprinter Van</option>
+                  <option>Box Truck 16'</option>
+                  <option>Box Truck 24'</option>
+                  <option>Box Truck 26'</option>
+                </optgroup>
+                <optgroup label="Specialty">
+                  <option>Conestoga 53'</option>
+                  <option>Conestoga 48'</option>
+                  <option>Curtainside 53'</option>
+                  <option>Side Kit Flatbed</option>
+                  <option>Stretch RGN</option>
+                  <option>Power Only</option>
+                  <option>Tanker</option>
+                  <option>Pneumatic Tanker</option>
+                  <option>Dump Trailer</option>
+                  <option>Auto Carrier</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fuel Surcharge ($/mi)</label>
+              <input type="number" id="fsc" step="0.01" placeholder="e.g. 0.42">
+            </div>
+            <div class="field">
+              <label>Accessorials ($)</label>
+              <input type="number" id="acc" placeholder="e.g. 150">
+            </div>
+            <div class="field">
+              <label>Deadhead Miles</label>
+              <input type="number" id="dh" placeholder="e.g. 45">
+            </div>
+            <div class="field">
+              <label>Stops (beyond 1)</label>
+              <input type="number" id="stops" placeholder="e.g. 0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Margin -->
+        <div class="section-box">
+          <h3><i class="ti ti-percentage"></i>Your Target Margin</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>Broker Margin %</label>
+              <input type="number" id="margin" placeholder="e.g. 15" class="highlight-input">
+            </div>
+            <div class="field">
+              <label>Rate Basis</label>
+              <select id="rate-basis">
+                <option value="w30">Weight toward 30-day (conservative)</option>
+                <option value="avg" selected>Straight average (balanced)</option>
+                <option value="w1y">Weight toward 1-year (historical)</option>
+                <option value="f13m">Use 13M forecast (aggressive)</option>
+              </select>
+            </div>
+          </div>
+          <button class="calc-btn" onclick="autoCalc()" style="margin-top:12px;background:var(--sf3);color:var(--tx);border:0.5px solid var(--bd2)">
+            <i class="ti ti-calculator"></i>Calculate Quote
+          </button>
+          <button class="calc-btn" onclick="getAIQuote()" style="margin-top:8px">
+            <i class="ti ti-sparkles"></i>Get AI Quote Recommendation
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── WEIGHT VIEW ── -->
+    <div class="view" id="v-weight">
+      <div class="vhdr">
+        <i class="ti ti-weight" style="font-size:17px;color:var(--am)"></i>
+        <span class="vhdr-title">Weight & Payload Calculator</span>
+      </div>
+      <div class="rpanel">
+        <div class="result-cards">
+          <div class="rcard highlight">
+            <div class="rc-label">Available Payload</div>
+            <div class="rc-val" id="w-payload">— lbs</div>
+            <div class="rc-sub" id="w-payload-sub">Enter weights below</div>
+          </div>
+          <div class="rcard">
+            <div class="rc-label">Combined Tare</div>
+            <div class="rc-val" id="w-tare">— lbs</div>
+            <div class="rc-sub">truck + trailer + driver/fuel</div>
+          </div>
+          <div class="rcard">
+            <div class="rc-label">GVW Limit</div>
+            <div class="rc-val" id="w-gvw-out">80,000 lbs</div>
+            <div class="rc-sub">federal maximum</div>
+          </div>
+        </div>
+        <div class="weight-warn" id="w-warn">
+          <i class="ti ti-alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>
+          <strong>Overweight warning:</strong> <span id="w-warn-txt"></span>
+        </div>
+        <div class="section-box">
+          <h3><i class="ti ti-truck"></i>Tractor</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>Tractor Type</label>
+              <select id="wt-type" onchange="wCalc()">
+                <option value="17000">Day Cab (~17,000 lbs)</option>
+                <option value="19500">Sleeper (~19,500 lbs)</option>
+                <option value="18000">Day Cab Heavy (~18,000 lbs)</option>
+                <option value="0">Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Custom Tractor lbs</label>
+              <input type="number" id="wt-custom" placeholder="leave blank if using preset" oninput="wCalc()">
+            </div>
+          </div>
+        </div>
+        <div class="section-box">
+          <h3><i class="ti ti-container"></i>Trailer</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>Trailer Type</label>
+              <select id="wtr-type" onchange="wCalc()">
+                <optgroup label="Dry Van">
+                  <option value="13500">53' Dry Van (~13,500 lbs)</option>
+                  <option value="12000">48' Dry Van (~12,000 lbs)</option>
+                  <option value="11500">45' Dry Van (~11,500 lbs)</option>
+                </optgroup>
+                <optgroup label="Reefer">
+                  <option value="15000">53' Reefer (~15,000 lbs)</option>
+                  <option value="14500">48' Reefer (~14,500 lbs)</option>
+                </optgroup>
+                <optgroup label="Flatbed">
+                  <option value="11500">48' Flatbed (~11,500 lbs)</option>
+                  <option value="12000">53' Flatbed (~12,000 lbs)</option>
+                  <option value="10500">45' Flatbed (~10,500 lbs)</option>
+                  <option value="9500">40' Flatbed (~9,500 lbs)</option>
+                </optgroup>
+                <optgroup label="Step Deck">
+                  <option value="11000">53' Step Deck (~11,000 lbs)</option>
+                  <option value="10500">48' Step Deck (~10,500 lbs)</option>
+                </optgroup>
+                <optgroup label="RGN / Lowboy">
+                  <option value="14000">RGN (~14,000 lbs)</option>
+                  <option value="15000">Lowboy 48' (~15,000 lbs)</option>
+                  <option value="16000">Stretch RGN (~16,000 lbs)</option>
+                  <option value="13500">Double Drop (~13,500 lbs)</option>
+                </optgroup>
+                <optgroup label="Hotshot">
+                  <option value="3500">Hotshot 20' (~3,500 lbs)</option>
+                  <option value="4000">Hotshot 30' (~4,000 lbs)</option>
+                  <option value="4500">Hotshot 40' (~4,500 lbs)</option>
+                </optgroup>
+                <optgroup label="Van / Sprinter">
+                  <option value="5500">Sprinter Van (~5,500 lbs)</option>
+                  <option value="8000">Box Truck 16' (~8,000 lbs)</option>
+                  <option value="10000">Box Truck 24' (~10,000 lbs)</option>
+                  <option value="11000">Box Truck 26' (~11,000 lbs)</option>
+                </optgroup>
+                <optgroup label="Specialty">
+                  <option value="13000">Conestoga 53' (~13,000 lbs)</option>
+                  <option value="12500">Curtainside 53' (~12,500 lbs)</option>
+                  <option value="13000">Tanker (~13,000 lbs)</option>
+                  <option value="12000">Dump Trailer (~12,000 lbs)</option>
+                  <option value="0">Custom</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label>Custom Trailer lbs</label>
+              <input type="number" id="wtr-custom" placeholder="leave blank if using preset" oninput="wCalc()">
+            </div>
+          </div>
+        </div>
+        <div class="section-box">
+          <h3><i class="ti ti-user"></i>Driver & Fuel</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>Driver + Fuel est. (lbs)</label>
+              <input type="number" id="w-driver" value="1000" oninput="wCalc()">
+            </div>
+            <div class="field">
+              <label>State GVW Limit (lbs)</label>
+              <input type="number" id="w-limit" placeholder="80000" oninput="wCalc()">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BROKER TOOLS VIEW ── -->
+    <div class="view" id="v-docs">
+      <div class="vhdr">
+        <i class="ti ti-tools" style="font-size:17px;color:var(--am)"></i>
+        <span class="vhdr-title">Broker Tools</span>
+      </div>
+      <div class="rpanel">
+
+        <!-- ── DETENTION CALCULATOR ── -->
+        <div class="section-box">
+          <h3><i class="ti ti-clock-dollar"></i>Detention Calculator</h3>
+          <div class="form-grid three">
+            <div class="field">
+              <label>Arrival Time</label>
+              <input type="time" id="det-arrive">
+            </div>
+            <div class="field">
+              <label>Released Time</label>
+              <input type="time" id="det-release">
+            </div>
+            <div class="field">
+              <label>Free Time (hrs)</label>
+              <input type="number" id="det-free" value="2" step="0.5" oninput="calcDetention()">
+            </div>
+            <div class="field">
+              <label>Detention Rate ($/hr)</label>
+              <input type="number" id="det-rate" placeholder="e.g. 65" oninput="calcDetention()">
+            </div>
+            <div class="field">
+              <label>Max Detention Cap ($)</label>
+              <input type="number" id="det-cap" placeholder="e.g. 300 — leave blank for none" oninput="calcDetention()">
+            </div>
+            <div class="field">
+              <label>Location</label>
+              <select id="det-loc" onchange="calcDetention()">
+                <option value="pickup">Pickup</option>
+                <option value="delivery">Delivery</option>
+              </select>
+            </div>
+          </div>
+          <div id="det-result" class="tool-result" style="display:none;margin-top:12px">
+            <div class="tr-row"><span class="tr-label">Total time on site</span><span class="tr-val" id="det-total-time">—</span></div>
+            <div class="tr-row"><span class="tr-label">Billable detention time</span><span class="tr-val" id="det-bill-time">—</span></div>
+            <div class="tr-row highlight"><span class="tr-label">Detention charge</span><span class="tr-val" id="det-charge">—</span></div>
+          </div>
+          <button class="calc-btn" style="margin-top:10px" onclick="calcDetention()"><i class="ti ti-calculator"></i>Calculate Detention</button>
+        </div>
+
+        <!-- ── TONU / LAYOVER CALCULATOR ── -->
+        <div class="section-box">
+          <h3><i class="ti ti-circle-x"></i>TONU & Layover Calculator</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+            <div style="background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--r);padding:14px">
+              <div style="font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i class="ti ti-truck-off" style="font-size:15px;color:var(--am)"></i>TONU (Truck Ordered Not Used)</div>
+              <div class="field" style="margin-bottom:8px"><label>Agreed TONU Rate ($)</label><input type="number" id="tonu-rate" placeholder="e.g. 200" oninput="calcTONU()"></div>
+              <div class="field" style="margin-bottom:8px"><label>Miles carrier drove to pickup</label><input type="number" id="tonu-miles" placeholder="e.g. 85" oninput="calcTONU()"></div>
+              <div class="field" style="margin-bottom:10px"><label>Deadhead rate ($/mi)</label><input type="number" id="tonu-dh-rate" placeholder="e.g. 1.50" step="0.01" oninput="calcTONU()"></div>
+              <div id="tonu-result" class="tool-result" style="display:none">
+                <div class="tr-row"><span class="tr-label">Base TONU</span><span class="tr-val" id="tonu-base">—</span></div>
+                <div class="tr-row"><span class="tr-label">Deadhead compensation</span><span class="tr-val" id="tonu-dh">—</span></div>
+                <div class="tr-row highlight"><span class="tr-label">Total owed to carrier</span><span class="tr-val" id="tonu-total">—</span></div>
+              </div>
+              <button class="calc-btn" style="margin-top:8px" onclick="calcTONU()"><i class="ti ti-calculator"></i>Calculate TONU</button>
+            </div>
+
+            <div style="background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--r);padding:14px">
+              <div style="font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i class="ti ti-moon" style="font-size:15px;color:var(--am)"></i>Layover Pay</div>
+              <div class="field" style="margin-bottom:8px"><label>Layover Rate ($/day)</label><input type="number" id="lay-rate" placeholder="e.g. 250" oninput="calcLayover()"></div>
+              <div class="field" style="margin-bottom:8px"><label>Number of days</label><input type="number" id="lay-days" placeholder="e.g. 1" oninput="calcLayover()"></div>
+              <div class="field" style="margin-bottom:10px"><label>Notes (optional)</label><input type="text" id="lay-notes" placeholder="e.g. weather delay, shipper not ready"></div>
+              <div id="lay-result" class="tool-result" style="display:none">
+                <div class="tr-row highlight"><span class="tr-label">Total layover pay</span><span class="tr-val" id="lay-total">—</span></div>
+              </div>
+              <button class="calc-btn" style="margin-top:8px" onclick="calcLayover()"><i class="ti ti-calculator"></i>Calculate Layover</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── CARRIER EMAIL GENERATOR ── -->
+        <div class="section-box">
+          <h3><i class="ti ti-mail-forward"></i>Carrier Email Generator</h3>
+          <div class="form-grid" style="margin-bottom:10px">
+            <div class="field">
+              <label>Email Type</label>
+              <select id="email-type">
+                <option value="inquiry">Load details response (carrier inquiry)</option>
+                <option value="confirm">Load confirmation / recap</option>
+                <option value="checkcall">Check call request</option>
+                <option value="detention">Detention approval notice</option>
+                <option value="tonu">TONU notification</option>
+                <option value="layover">Layover approval</option>
+                <option value="ratenego">Rate negotiation response</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Carrier Name / Company</label>
+              <input type="text" id="email-carrier" placeholder="e.g. Smith Trucking / John">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Load Details (paste or type — origin, destination, miles, rate, pickup date, commodity, weight, equipment)</label>
+            <textarea id="email-load" rows="3" style="width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;resize:vertical;line-height:1.5" placeholder="e.g. Chicago IL to Nashville TN, 480 miles, $1,450 all-in, pickup 5/20 @ 0800, dry van 53', 42,000 lbs, no-touch freight"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Any extra context? (optional)</label>
+            <input type="text" id="email-context" placeholder="e.g. carrier asked about lumper, detention policy, or rate breakdown">
+          </div>
+          <div id="email-result" style="display:none;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <span style="font-size:12px;font-weight:600;color:var(--tx2)">Generated Email</span>
+              <button onclick="copyEmail()" style="background:none;border:0.5px solid var(--bd2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px"><i class="ti ti-copy" style="font-size:13px"></i>Copy</button>
+            </div>
+            <textarea id="email-output" rows="10" readonly style="width:100%;background:var(--sf2);border:0.5px solid var(--bd);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;resize:vertical;line-height:1.6"></textarea>
+          </div>
+          <button class="calc-btn" onclick="generateEmail()"><i class="ti ti-sparkles"></i>Generate Email</button>
+        </div>
+
+        <!-- ── EQUIPMENT DIMENSIONS ── -->
+        <div class="section-box">
+          <h3><i class="ti ti-ruler-measure"></i>Freight Item Dimensions Lookup</h3>
+          <div class="field" style="margin-bottom:10px">
+            <label>What are you moving? (year, make, model helps)</label>
+            <input type="text" id="dims-input" placeholder="e.g. 2022 Caterpillar 320 excavator, Bobcat S650 skid steer, John Deere 8R tractor..." style="font-size:14px;padding:10px 12px" onkeydown="if(event.key==='Enter')lookupDims()">
+          </div>
+          <div id="dims-result" style="display:none;margin-bottom:10px">
+            <div style="background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden">
+              <div style="padding:8px 12px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:12px;font-weight:600;color:var(--am);display:flex;align-items:center;gap:6px"><i class="ti ti-ruler"></i><span id="dims-equip-label">—</span></span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
+                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center">
+                  <div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Length</div>
+                  <div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-length">—</div>
+                </div>
+                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center">
+                  <div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Width</div>
+                  <div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-width">—</div>
+                </div>
+                <div style="padding:14px 16px;text-align:center">
+                  <div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Height</div>
+                  <div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-height">—</div>
+                </div>
+              </div>
+              <div id="dims-notes" style="padding:10px 14px;border-top:0.5px solid var(--bd);font-size:12px;color:var(--tx2);line-height:1.6;display:none"></div>
+            </div>
+          </div>
+          <div id="dims-error" style="display:none;padding:10px 14px;background:var(--rd-lt);border:0.5px solid var(--rd);border-radius:var(--r);font-size:13px;color:var(--rd);margin-bottom:10px"></div>
+          <button class="calc-btn" onclick="lookupDims()"><i class="ti ti-ruler-measure"></i>Look Up Dimensions</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const SYSTEM = `You are FreightDesk AI, an expert assistant built for freight brokers.
+You specialize in: load rate calculations, DAT RateView interpretation, broker margin strategy, winnable quote recommendations, DOT/FMCSA compliance, HOS rules, freight paperwork (BOL, rate con, POD), carrier vetting, cargo claims, and weight/payload rules.
+Be direct, specific, and practical. Use real numbers. Keep responses concise but complete. You are speaking to a working freight broker.`;
+
+function getKey() {
+  return localStorage.getItem('fd_api_key') || '';
+}
+
+function apiHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': getKey(),
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+}
+
+function promptForKey() {
+  const k = prompt('Enter your Anthropic API key to power FreightDesk AI:\n(Starts with sk-ant-...)');
+  if (k && k.startsWith('sk-')) {
+    localStorage.setItem('fd_api_key', k.trim());
+    return k.trim();
+  } else if (k) {
+    alert('That doesn\'t look like a valid Anthropic API key. It should start with sk-ant-');
+  }
+  return null;
+}
+
+let msgs = [];
+let busy = false;
+
+function ts() {
+  return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function addBubble(role, text) {
+  const area = document.getElementById('chat-area');
+  const d = document.createElement('div');
+  d.className = 'msg ' + (role==='user'?'u':'a');
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = text;
+  const t = document.createElement('div');
+  t.className = 'msg-time';
+  t.textContent = ts();
+  d.appendChild(b);
+  d.appendChild(t);
+  area.appendChild(d);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping() {
+  const area = document.getElementById('chat-area');
+  const d = document.createElement('div');
+  d.id = 'typing';
+  d.className = 'typing-wrap';
+  d.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  area.appendChild(d);
+  area.scrollTop = area.scrollHeight;
+}
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if(t) t.remove();
+}
+
+async function callAPI(userText) {
+  if (!getKey()) { const k = promptForKey(); if (!k) { busy = false; return; } }
+  msgs.push({role:'user', content: userText});
+  showTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1000,
+        system: SYSTEM,
+        messages: msgs
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+    if (!res.ok) {
+      const errMsg = data.error?.message || JSON.stringify(data);
+      msgs.pop();
+      addBubble('assistant', '⚠️ API Error (' + res.status + '): ' + errMsg + '\n\nIf this is an auth error, click "API Key Settings" and re-enter your key.');
+      busy = false;
+      return;
+    }
+    const reply = data.content?.find(b=>b.type==='text')?.text || 'No response received.';
+    msgs.push({role:'assistant', content: reply});
+    addBubble('assistant', reply);
+  } catch(e) {
+    hideTyping();
+    addBubble('assistant', '⚠️ Connection error: ' + e.message + '\n\nCheck your internet connection and try again.');
+  }
+  busy = false;
+}
+
+async function sendMsg() {
+  if(busy) return;
+  const inp = document.getElementById('user-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  inp.value = '';
+  inp.style.height = 'auto';
+  document.getElementById('chip-row').style.display='none';
+  addBubble('user', txt);
+  busy = true;
+  await callAPI(txt);
+}
+
+function chip(t) {
+  document.getElementById('user-input').value = t;
+  sendMsg();
+}
+
+function askAI(t) {
+  nav('chat');
+  setTimeout(()=>chip(t), 60);
+}
+
+function nav(id) {
+  ['chat','rate','weight','docs'].forEach(v => {
+    document.getElementById('v-'+v).classList.remove('on');
+    const nb = document.getElementById('n-'+v);
+    if(nb) nb.classList.remove('active');
+  });
+  document.getElementById('v-'+id).classList.add('on');
+  const nb = document.getElementById('n-'+id);
+  if(nb) nb.classList.add('active');
+}
+
+// ── RATE CALC ──
+// DAT inputs are TOTAL LOAD dollars, not $/mi
+function getBasis() {
+  const d30  = parseFloat(document.getElementById('d30').value)  || 0;
+  const d60  = parseFloat(document.getElementById('d60').value)  || 0;
+  const d1y  = parseFloat(document.getElementById('d1y').value)  || 0;
+  const d13m = parseFloat(document.getElementById('d13m').value) || 0;
+  const vals = [d30,d60,d1y,d13m].filter(v=>v>0);
+  if(!vals.length) return 0;
+  const basis = document.getElementById('rate-basis').value;
+  if(basis==='w30')  return d30  || vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(basis==='w1y')  return d1y  || vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(basis==='f13m') return d13m || vals.reduce((a,b)=>a+b,0)/vals.length;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+function autoCalc() {
+  const d30  = parseFloat(document.getElementById('d30').value)  || 0;
+  const d60  = parseFloat(document.getElementById('d60').value)  || 0;
+  const d1y  = parseFloat(document.getElementById('d1y').value)  || 0;
+  const d13m = parseFloat(document.getElementById('d13m').value) || 0;
+  const miles = parseFloat(document.getElementById('miles').value) || 0;
+  const fsc   = parseFloat(document.getElementById('fsc').value)  || 0;
+  const acc   = parseFloat(document.getElementById('acc').value)  || 0;
+  const stops = parseFloat(document.getElementById('stops').value)|| 0;
+  const marginPct = parseFloat(document.getElementById('margin').value);
+
+  // Trend display (comparing total $ values directly)
+  const vals = [d30,d60,d1y,d13m].filter(v=>v>0);
+  const trendDiv = document.getElementById('trend-display');
+  if(vals.length >= 2) {
+    trendDiv.style.display='block';
+    const mn = Math.min(...vals), mx = Math.max(...vals);
+    const last = vals[vals.length-1];
+    const pct = mx>mn ? Math.round(((last-mn)/(mx-mn))*100) : 50;
+    document.getElementById('trend-fill').style.width = pct+'%';
+    document.getElementById('trend-range').textContent = '$'+mn.toLocaleString()+' – $'+mx.toLocaleString();
+    const tag = document.getElementById('trend-tag');
+    if(d13m > d30 && vals.length===4) { tag.textContent='↑ Rising market'; tag.className='tag up'; }
+    else if(d13m < d30 && vals.length===4) { tag.textContent='↓ Softening market'; tag.className='tag dn'; }
+    else { tag.textContent='→ Stable market'; tag.className='tag flat'; }
+  } else { trendDiv.style.display='none'; }
+
+  if(!marginPct || isNaN(marginPct)) {
+    document.getElementById('out-quote').textContent='—';
+    document.getElementById('out-carrier').textContent='—';
+    document.getElementById('out-margin').textContent='—';
+    document.getElementById('out-margin-pct').textContent='—% margin';
+    return;
+  }
+
+  // DAT total is the carrier base — add FSC ($/mi × miles), accessorials, stop charges on top
+  const datTotal = getBasis();
+  if(!datTotal) return;
+
+  const stopCharge = stops * 75;
+  const fscTotal = fsc * miles;
+  const carrierBase = datTotal + fscTotal + acc + stopCharge;
+  const quoteTotal = carrierBase / (1 - marginPct/100);
+  const grossMargin = quoteTotal - carrierBase;
+
+  document.getElementById('out-quote').textContent = '$'+quoteTotal.toFixed(2);
+  document.getElementById('out-quote-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total load';
+  document.getElementById('out-carrier').textContent = '$'+carrierBase.toFixed(2);
+  document.getElementById('out-carrier-pm').textContent = (miles ? miles.toLocaleString()+' mi · ' : '') + 'total to carrier';
+  document.getElementById('out-margin').textContent = '$'+grossMargin.toFixed(2);
+  document.getElementById('out-margin-pct').textContent = marginPct.toFixed(1)+'% margin';
+}
+
+async function getAIQuote() {
+  const d30  = document.getElementById('d30').value;
+  const d60  = document.getElementById('d60').value;
+  const d1y  = document.getElementById('d1y').value;
+  const d13m = document.getElementById('d13m').value;
+  const miles = document.getElementById('miles').value;
+  const margin = document.getElementById('margin').value;
+  const equip = document.getElementById('equip').value;
+  const fsc = document.getElementById('fsc').value;
+  const acc = document.getElementById('acc').value;
+  const basis = document.getElementById('rate-basis').value;
+
+  if(!margin || !d30) {
+    alert('Enter at least the 30-day DAT rate and your target margin to get an AI recommendation.');
+    return;
+  }
+
+  const box = document.getElementById('ai-result');
+  const body = document.getElementById('ai-result-body');
+  box.classList.add('show');
+  body.textContent = 'Analyzing your DAT data...';
+
+  const prompt = `I am quoting a ${equip} load of ${miles||'unknown'} miles.
+
+DAT RateView data (TOTAL LOAD dollars, not per mile):
+- 30-Day (xmkt › reg): $${d30||'not provided'} total
+- 60-Day (xmkt › xmkt): $${d60||'not provided'} total
+- 1-Year (xmkt › xmkt): $${d1y||'not provided'} total
+- +13M Forecast: $${d13m||'not provided'} total
+
+My target broker margin: ${margin}%
+Fuel surcharge: $${fsc||0}/mi
+Accessorials: $${acc||0}
+Rate basis selected: ${basis}
+
+Based on this DAT market data (total load dollars) and my margin target, give me:
+1. The total rate I should quote the shipper
+2. The total I should pay the carrier
+3. Whether this market is trending up, down, or flat and why that matters for this quote
+4. One sentence on whether my margin is competitive or if I should adjust
+Keep it tight and practical.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:600,
+        system: SYSTEM,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    body.textContent = data.content?.find(b=>b.type==='text')?.text || 'Could not generate recommendation.';
+  } catch(e) {
+    body.textContent = 'Connection error. Try again.';
+  }
+}
+
+// ── WEIGHT CALC ──
+function wCalc() {
+  const tSel = parseInt(document.getElementById('wt-type').value)||0;
+  const tCust = parseFloat(document.getElementById('wt-custom').value)||0;
+  const trSel = parseInt(document.getElementById('wtr-type').value)||0;
+  const trCust = parseFloat(document.getElementById('wtr-custom').value)||0;
+  const driver = parseFloat(document.getElementById('w-driver').value)||0;
+  const limitVal = parseFloat(document.getElementById('w-limit').value)||80000;
+
+  const tractor = tCust || tSel;
+  const trailer = trCust || trSel;
+  const tare = tractor + trailer + driver;
+  const payload = limitVal - tare;
+
+  document.getElementById('w-tare').textContent = tare.toLocaleString()+' lbs';
+  document.getElementById('w-gvw-out').textContent = limitVal.toLocaleString()+' lbs';
+  document.getElementById('w-payload').textContent = Math.max(0,payload).toLocaleString()+' lbs';
+
+  const warn = document.getElementById('w-warn');
+  if(payload < 0) {
+    warn.classList.add('show');
+    document.getElementById('w-warn-txt').textContent = 'Tare weight exceeds GVW limit by '+Math.abs(payload).toLocaleString()+' lbs. This combination cannot legally haul any freight.';
+    document.getElementById('w-payload-sub').textContent = '⚠ Overweight — check your inputs';
+  } else if(payload < 5000) {
+    warn.classList.add('show');
+    document.getElementById('w-warn-txt').textContent = 'Available payload is under 5,000 lbs. Very limited capacity — verify your weights.';
+    document.getElementById('w-payload-sub').textContent = 'Low capacity — verify inputs';
+  } else {
+    warn.classList.remove('show');
+    document.getElementById('w-payload-sub').textContent = 'before hitting '+limitVal.toLocaleString()+' lb limit';
+  }
+}
+
+// ── DETENTION CALC ──
+function calcDetention() {
+  const arrive = document.getElementById('det-arrive').value;
+  const release = document.getElementById('det-release').value;
+  const free = parseFloat(document.getElementById('det-free').value) || 2;
+  const rate = parseFloat(document.getElementById('det-rate').value) || 0;
+  const cap = parseFloat(document.getElementById('det-cap').value) || Infinity;
+  if (!arrive || !release || !rate) return;
+  const [ah, am] = arrive.split(':').map(Number);
+  const [rh, rm] = release.split(':').map(Number);
+  let totalMins = (rh * 60 + rm) - (ah * 60 + am);
+  if (totalMins < 0) totalMins += 1440;
+  const totalHrs = totalMins / 60;
+  const billable = Math.max(0, totalHrs - free);
+  let charge = Math.min(billable * rate, cap);
+  const fmt = h => { const hrs = Math.floor(h); const mins = Math.round((h - hrs) * 60); return hrs + 'h ' + (mins ? mins + 'm' : ''); };
+  document.getElementById('det-total-time').textContent = fmt(totalHrs);
+  document.getElementById('det-bill-time').textContent = billable > 0 ? fmt(billable) : 'None (within free time)';
+  document.getElementById('det-charge').textContent = billable > 0 ? '$' + charge.toFixed(2) : '$0.00';
+  document.getElementById('det-result').style.display = 'block';
+}
+
+// ── TONU CALC ──
+function calcTONU() {
+  const base = parseFloat(document.getElementById('tonu-rate').value) || 0;
+  const miles = parseFloat(document.getElementById('tonu-miles').value) || 0;
+  const dhRate = parseFloat(document.getElementById('tonu-dh-rate').value) || 0;
+  if (!base) return;
+  const dh = miles * dhRate;
+  const total = base + dh;
+  document.getElementById('tonu-base').textContent = '$' + base.toFixed(2);
+  document.getElementById('tonu-dh').textContent = dh > 0 ? '$' + dh.toFixed(2) : '$0.00';
+  document.getElementById('tonu-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('tonu-result').style.display = 'block';
+}
+
+// ── LAYOVER CALC ──
+function calcLayover() {
+  const rate = parseFloat(document.getElementById('lay-rate').value) || 0;
+  const days = parseFloat(document.getElementById('lay-days').value) || 0;
+  if (!rate || !days) return;
+  const total = rate * days;
+  document.getElementById('lay-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('lay-result').style.display = 'block';
+}
+
+// ── EMAIL GENERATOR ──
+async function generateEmail() {
+  const type = document.getElementById('email-type').value;
+  const carrier = document.getElementById('email-carrier').value || 'the carrier';
+  const load = document.getElementById('email-load').value;
+  const context = document.getElementById('email-context').value;
+  if (!load.trim()) { alert('Paste in your load details first.'); return; }
+  const typeLabels = {
+    inquiry: 'a response to a carrier inquiry about load details',
+    confirm: 'a load confirmation and recap',
+    checkcall: 'a check call request',
+    detention: 'a detention approval notice',
+    tonu: 'a TONU (Truck Ordered Not Used) notification',
+    layover: 'a layover approval notification',
+    ratenego: 'a rate negotiation response'
+  };
+  const btn = document.querySelector('#v-docs .calc-btn:last-of-type');
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+  const prompt = `Write ${typeLabels[type]} email from a freight broker to ${carrier}.
+
+Load details: ${load}
+${context ? 'Additional context: ' + context : ''}
+
+Write a professional, concise freight broker email. Use a clear subject line on the first line starting with "Subject:". Be direct and friendly. Include all relevant load details naturally in the email. Sign off as "FreightDesk Logistics".`;
+  const resultBox = document.getElementById('email-result');
+  const output = document.getElementById('email-output');
+  resultBox.style.display = 'block';
+  output.value = 'Drafting your email...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 600,
+        system: SYSTEM,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    output.value = data.content?.find(b => b.type === 'text')?.text || 'Could not generate email.';
+  } catch(e) {
+    output.value = 'Connection error. Check your API key in settings and try again.';
+  }
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Email';
+  btn.disabled = false;
+}
+
+function copyEmail() {
+  const txt = document.getElementById('email-output').value;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('#email-result button');
+    btn.innerHTML = '<i class="ti ti-check" style="font-size:13px"></i>Copied!';
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" style="font-size:13px"></i>Copy'; }, 2000);
+  });
+}
+
+// ── INPUT RESIZE ──
+document.getElementById('user-input').addEventListener('input', function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,110)+'px';
+});
+document.getElementById('user-input').addEventListener('keydown', function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+});
+
+function changeKey() {
+  const current = getKey();
+  const msg = current ? 'Update your Anthropic API key (current key saved):\n(Leave blank to keep existing key)' : 'Enter your Anthropic API key:\n(Starts with sk-ant-)';
+  const k = prompt(msg);
+  if (k && k.trim().startsWith('sk-')) {
+    localStorage.setItem('fd_api_key', k.trim());
+    alert('API key saved! FreightDesk AI is ready.');
+  } else if (k && k.trim() !== '') {
+    alert('Invalid key format. Should start with sk-ant-');
+  }
+}
+
+// ── EQUIPMENT DIMS LOOKUP ──
+async function lookupDims() {
+  const input = document.getElementById('dims-input').value.trim();
+  if (!input) return;
+  if (!getKey()) { const k = promptForKey(); if (!k) return; }
+
+  const btn = document.querySelector('#v-docs .section-box:last-child .calc-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Looking up...';
+  btn.disabled = true;
+
+  document.getElementById('dims-result').style.display = 'none';
+  document.getElementById('dims-error').style.display = 'none';
+
+  const prompt = `A freight broker needs the typical transport dimensions (length × width × height) for the following piece of equipment or cargo item: "${input}"
+
+This is for passing dimensions to a driver — give the overall machine/item dimensions as it would sit on a trailer, including any attachments that would typically be present during transport (bucket, blade, boom, etc). Use feet and inches format.
+
+Respond ONLY with a JSON object in this exact format, no other text:
+{
+  "label": "Full item name (e.g. Caterpillar 320 Excavator)",
+  "length": "e.g. 32' 6\\"",
+  "width": "e.g. 10' 4\\"",
+  "height": "e.g. 10' 8\\"",
+  "notes": "Any important transport note — e.g. boom must be lowered, bucket removed, or wide load permit likely required. Keep to one sentence. Empty string if none."
+}
+
+If the item is not recognizable or too vague to give reliable dims, set label to "Unknown" and the rest to "N/A".`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 300,
+        system: SYSTEM,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    if (parsed.label === 'Unknown') {
+      document.getElementById('dims-error').textContent = `Could not find dimensions for "${input}". Try adding more detail — year, make, and model work best (e.g. "2020 John Deere 333G skid steer").`;
+      document.getElementById('dims-error').style.display = 'block';
+    } else {
+      document.getElementById('dims-equip-label').textContent = parsed.label;
+      document.getElementById('dims-length').textContent = parsed.length;
+      document.getElementById('dims-width').textContent = parsed.width;
+      document.getElementById('dims-height').textContent = parsed.height;
+      const notesEl = document.getElementById('dims-notes');
+      if (parsed.notes) {
+        notesEl.textContent = parsed.notes;
+        notesEl.style.display = 'block';
+      } else {
+        notesEl.style.display = 'none';
+      }
+      document.getElementById('dims-result').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('dims-error').textContent = 'Connection error or unexpected response. Check your API key and try again.';
+    document.getElementById('dims-error').style.display = 'block';
+  }
+
+  btn.innerHTML = '<i class="ti ti-ruler-measure"></i>Look Up Dimensions';
+  btn.disabled = false;
+}
+
+// ── BOOT ──
+window.addEventListener('load', () => {
+  if (!getKey()) {
+    addBubble('assistant', "Welcome to FreightDesk AI! 👋\n\nTo get started, I need your Anthropic API key. Click \"API Key Settings\" in the bottom-left sidebar to enter it — it saves locally and you'll never need to enter it again.\n\nGet your key at: platform.anthropic.com");
+  } else {
+    addBubble('assistant', "Hey! FreightDesk AI is ready.\n\nPaste your DAT numbers into Rate & Quote, set your margin, and I'll give you your quote.\n\nOr ask me anything — rates, HOS, carrier vetting, compliance. I've got you.");
+  }
+});
+</script>
+</body>
+</html>
