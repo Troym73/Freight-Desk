@@ -199,7 +199,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
       <div class="ref-r"><span class="rl">Box Truck 26'</span><span class="rv">~11,000</span></div>
     </div>
     <div style="padding:10px 12px 16px;margin-top:auto;border-top:0.5px solid var(--bd)">
-      <button class="nb" style="width:100%;border-radius:var(--r)" onclick="changeKey()"><i class="ti ti-key"></i>API Key Settings</button>
+      <button class="nb" style="width:100%;border-radius:var(--r)" onclick="changeKey()" hidden><i class="ti ti-key"></i>API Key Settings</button>
     </div>
   </div>
 
@@ -697,8 +697,10 @@ const SYSTEM = `You are FreightDesk AI, an expert assistant built for freight br
 You specialize in: load rate calculations, DAT RateView interpretation, broker margin strategy, winnable quote recommendations, DOT/FMCSA compliance, HOS rules, freight paperwork (BOL, rate con, POD), carrier vetting, cargo claims, and weight/payload rules.
 Be direct, specific, and practical. Use real numbers. Keep responses concise but complete. You are speaking to a working freight broker.`;
 
+const FDAI_KEY = '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';
+
 function getKey() {
-  return localStorage.getItem('fd_api_key') || '';
+  return FDAI_KEY;
 }
 
 function apiHeaders() {
@@ -710,16 +712,7 @@ function apiHeaders() {
   };
 }
 
-function promptForKey() {
-  const k = prompt('Enter your Anthropic API key to power FreightDesk AI:\n(Starts with sk-ant-...)');
-  if (k && k.startsWith('sk-')) {
-    localStorage.setItem('fd_api_key', k.trim());
-    return k.trim();
-  } else if (k) {
-    alert('That doesn\'t look like a valid Anthropic API key. It should start with sk-ant-');
-  }
-  return null;
-}
+function promptForKey() { return FDAI_KEY; }
 
 let msgs = [];
 let busy = false;
@@ -1245,11 +1238,7 @@ If the item is not recognizable or too vague to give reliable dims, set label to
 
 // ── BOOT ──
 window.addEventListener('load', () => {
-  if (!getKey()) {
-    addBubble('assistant', "Welcome to FreightDesk AI! 👋\n\nTo get started, I need your Anthropic API key. Click \"API Key Settings\" in the bottom-left sidebar to enter it — it saves locally and you'll never need to enter it again.\n\nGet your key at: platform.anthropic.com");
-  } else {
-    addBubble('assistant', "Hey! FreightDesk AI is ready.\n\nPaste your DAT numbers into Rate & Quote, set your margin, and I'll give you your quote.\n\nOr ask me anything — rates, HOS, carrier vetting, compliance. I've got you.");
-  }
+  addBubble('assistant', "Hey! FreightDesk AI is ready.\n\nPaste your DAT numbers into Rate & Quote, set your margin, and I'll give you your quote.\n\nOr ask me anything — rates, HOS, carrier vetting, compliance. I've got you.");
 });
 </script>
 </body>
