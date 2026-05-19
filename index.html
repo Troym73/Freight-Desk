@@ -697,22 +697,16 @@ const SYSTEM = `You are FreightDesk AI, an expert assistant built for freight br
 You specialize in: load rate calculations, DAT RateView interpretation, broker margin strategy, winnable quote recommendations, DOT/FMCSA compliance, HOS rules, freight paperwork (BOL, rate con, POD), carrier vetting, cargo claims, and weight/payload rules.
 Be direct, specific, and practical. Use real numbers. Keep responses concise but complete. You are speaking to a working freight broker.`;
 
-const FDAI_KEY = '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';
-
-function getKey() {
-  return FDAI_KEY;
-}
+function getKey() { return 'server-side'; }
 
 function apiHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'x-api-key': getKey(),
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
-  };
+  return { 'Content-Type': 'application/json' };
 }
 
-function promptForKey() { return FDAI_KEY; }
+function promptForKey() { return 'server-side'; }
+
+// All API calls go through Netlify function — key is server-side only
+const API_ENDPOINT = '/api/claude';
 
 let msgs = [];
 let busy = false;
@@ -756,7 +750,7 @@ async function callAPI(userText) {
   msgs.push({role:'user', content: userText});
   showTyping();
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers: apiHeaders(),
       body: JSON.stringify({
@@ -824,46 +818,52 @@ async function lookupMiles() {
   const pu = document.getElementById('loc-pu').value.trim();
   const del = document.getElementById('loc-del').value.trim();
   if (!pu || !del) { alert('Enter both a pickup and delivery location.'); return; }
-  if (!getKey()) { const k = promptForKey(); if (!k) return; }
 
   const btn = document.getElementById('miles-btn');
   btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Calculating...';
   btn.disabled = true;
 
-  const prompt = `A freight broker needs the driving miles between two locations for trucking purposes.
+  const prompt = `What is the driving distance in miles between "${pu}" and "${del}" for a truck route in the United States?
 
-Pickup: ${pu}
-Delivery: ${del}
+Respond ONLY with a single JSON object, no markdown, no explanation, no extra text:
+{"miles":452}
 
-Respond ONLY with a JSON object, no other text:
-{
-  "miles": 452,
-  "note": "approximate driving miles via major interstates"
-}
-
-Use standard trucking route miles (similar to PC Miler or Google Maps driving distance). Round to nearest whole mile. If locations are unrecognizable, set miles to 0.`;
+Use standard trucking route miles. Round to nearest whole number. If either location is unrecognizable, respond with {"miles":0}.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: apiHeaders(),
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 100,
+        max_tokens: 50,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await res.json();
+    if (!res.ok) {
+      alert('API error: ' + (data.error?.message || res.status) + '. Enter miles manually.');
+      btn.innerHTML = '<i class="ti ti-map-pin"></i>Calculate Mileage';
+      btn.disabled = false;
+      return;
+    }
     const raw = data.content?.find(b => b.type === 'text')?.text || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    // Strip any markdown or extra text, grab first JSON object
+    const match = raw.match(/\{[^}]+\}/);
+    if (!match) {
+      alert('Could not parse mileage response. Enter miles manually.\n\nResponse was: ' + raw);
+      btn.innerHTML = '<i class="ti ti-map-pin"></i>Calculate Mileage';
+      btn.disabled = false;
+      return;
+    }
+    const parsed = JSON.parse(match[0]);
     if (parsed.miles > 0) {
       document.getElementById('miles').value = parsed.miles;
     } else {
-      alert('Could not calculate miles — check your city/state entries and try again.');
+      alert('"' + pu + '" or "' + del + '" could not be found. Check spelling and try City, State format (e.g. Memphis, TN).');
     }
   } catch(e) {
-    alert('Mileage lookup failed. You can enter miles manually.');
+    alert('Mileage lookup failed: ' + e.message + '\n\nStack: ' + e.stack);
   }
 
   btn.innerHTML = '<i class="ti ti-map-pin"></i>Calculate Mileage';
@@ -991,7 +991,7 @@ Based on this DAT market data (total load dollars) and my margin target, give me
 Keep it tight and practical.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers: apiHeaders(),
       body: JSON.stringify({
@@ -1117,7 +1117,7 @@ Write a professional, concise freight broker email. Use a clear subject line on 
   resultBox.style.display = 'block';
   output.value = 'Drafting your email...';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: apiHeaders(),
       body: JSON.stringify({
@@ -1195,7 +1195,7 @@ Respond ONLY with a JSON object in this exact format, no other text:
 If the item is not recognizable or too vague to give reliable dims, set label to "Unknown" and the rest to "N/A".`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: apiHeaders(),
       body: JSON.stringify({
