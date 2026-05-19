@@ -188,7 +188,7 @@ table.bt td.amber{color:var(--am);font-weight:600}
 table.bt td.green{color:var(--gn)}
 table.bt td.red{color:var(--rd)}
 .wr-wrap{display:flex;align-items:center;gap:6px}
-.wr-bar{flex:1;height:5px;background:var(--sf3);border-radius:3px;overflow:hidden}
+.wr-bar{flex:1;height:5px;background:var(--sf3);border-radius:3px;overflow:hidden;display:flex}
 .wr-fill{height:100%;border-radius:3px}
 .wr-fill.high{background:var(--gn)}
 .wr-fill.mid{background:var(--am)}
@@ -985,7 +985,7 @@ async function loadAdminDashboard() {
         <td>${b.quotes.length}</td>
         <td class="green">${b.won.length}</td>
         <td class="red">${b.lost.length}</td>
-        <td><div class="wr-wrap"><div class="wr-bar"><div class="wr-fill ${wrClass}" style="width:${wr}%"></div></div><span class="wr-pct ${wrClass}">${wr}%</span></div></td>
+        <td><div class="wr-wrap"><div class="wr-bar"><div style="height:100%;width:${wr}%;background:#15803d;border-radius:3px 0 0 3px;display:inline-block"></div><div style="height:100%;width:${100-wr}%;background:#b91c1c;border-radius:0 3px 3px 0;display:inline-block"></div></div><span class="wr-pct ${wrClass}">${wr}%</span></div></td>
         <td class="amber">$${revQuoted.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
         <td class="green">$${margWon.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
       </tr>`;
