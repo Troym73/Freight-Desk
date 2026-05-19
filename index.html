@@ -52,7 +52,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 #app.hidden{display:none}
 
 /* ── SIDEBAR ── */
-#sb{width:244px;min-width:244px;background:var(--sf);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto}
+#sb{width:244px;min-width:244px;background:var(--sf);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+#sb-scroll{flex:1;overflow-y:auto}
 .sb-top{padding:16px 14px 12px;border-bottom:0.5px solid var(--bd)}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{width:36px;height:36px;background:var(--am);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -72,7 +73,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .ref-h{padding:7px 11px;font-size:11px;font-weight:600;color:var(--tx2);background:var(--sf2);border-bottom:0.5px solid var(--bd)}
 .ref-r{display:flex;justify-content:space-between;align-items:center;padding:6px 11px;font-size:12px;border-bottom:0.5px solid var(--bd)}
 .rl{color:var(--tx3)}.rv{font-weight:500;color:var(--tx)}
-.sb-user{margin-top:auto;padding:12px 14px;border-top:0.5px solid var(--bd);display:flex;align-items:center;gap:10px}
+.sb-user{padding:12px 14px;border-top:0.5px solid var(--bd);display:flex;align-items:center;gap:10px}
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--am);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
 .user-info-name{font-size:13px;font-weight:500;color:var(--tx)}
 .user-info-role{font-size:11px;color:var(--tx3)}
@@ -256,7 +257,7 @@ table.bt td.red{color:var(--rd)}
   <div id="sb">
     <div class="sb-top">
       <div class="logo">
-        <div class="logo-icon"><i class="ti ti-truck"></i></div>
+        <div class="logo-icon" style="background:none;padding:0;overflow:hidden"><img src="data:image/png;base64,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" style="width:36px;height:36px;object-fit:cover;border-radius:9px"></div>
         <div>
           <div class="logo-name">FreightDesk AI</div>
           <div class="logo-sub">Fide Freight</div>
@@ -273,37 +274,38 @@ table.bt td.red{color:var(--rd)}
     <button class="nb" onclick="nav('quotes')" id="n-quotes"><i class="ti ti-chart-bar"></i>My Quotes</button>
     <button class="nb" id="n-admin" onclick="nav('admin')" style="display:none"><i class="ti ti-shield-check"></i>Admin Dashboard</button>
 
-    <div class="sl">Federal Limits</div>
-    <div class="ref">
-      <div class="ref-h"><i class="ti ti-alert-triangle" style="font-size:12px;margin-right:4px"></i>Max GVW</div>
-      <div class="ref-r"><span class="rl">Federal</span><span class="rv">80,000 lbs</span></div>
-      <div class="ref-r"><span class="rl">Steer axle</span><span class="rv">20,000 lbs</span></div>
-      <div class="ref-r"><span class="rl">Drive axle</span><span class="rv">34,000 lbs</span></div>
-      <div class="ref-r"><span class="rl">Tandem</span><span class="rv">34,000 lbs</span></div>
-    </div>
-    <div class="sl">Tare Weights</div>
-    <div class="ref">
-      <div class="ref-r"><span class="rl">53' Dry Van</span><span class="rv">~13,500</span></div>
-      <div class="ref-r"><span class="rl">53' Reefer</span><span class="rv">~15,000</span></div>
-      <div class="ref-r"><span class="rl">48' Flatbed</span><span class="rv">~11,500</span></div>
-      <div class="ref-r"><span class="rl">Step Deck 53'</span><span class="rv">~11,000</span></div>
-      <div class="ref-r"><span class="rl">RGN</span><span class="rv">~14,000</span></div>
-      <div class="ref-r"><span class="rl">Hotshot 20'</span><span class="rv">~3,500</span></div>
-      <div class="ref-r"><span class="rl">Hotshot 30'</span><span class="rv">~4,000</span></div>
-      <div class="ref-r"><span class="rl">Hotshot 40'</span><span class="rv">~4,500</span></div>
-      <div class="ref-r"><span class="rl">Sprinter Van</span><span class="rv">~5,500</span></div>
-      <div class="ref-r"><span class="rl">Box Truck 26'</span><span class="rv">~11,000</span></div>
-    </div>
-
-    <div style="padding:10px 12px">
-      <button class="nb" style="width:100%;border-radius:var(--r)" onclick="doSignOut()"><i class="ti ti-logout"></i>Sign out</button>
+    <div style="flex:1;overflow-y:auto">
+      <div class="sl">Federal Limits</div>
+      <div class="ref">
+        <div class="ref-h"><i class="ti ti-alert-triangle" style="font-size:12px;margin-right:4px"></i>Max GVW</div>
+        <div class="ref-r"><span class="rl">Federal</span><span class="rv">80,000 lbs</span></div>
+        <div class="ref-r"><span class="rl">Steer axle</span><span class="rv">20,000 lbs</span></div>
+        <div class="ref-r"><span class="rl">Drive axle</span><span class="rv">34,000 lbs</span></div>
+        <div class="ref-r"><span class="rl">Tandem</span><span class="rv">34,000 lbs</span></div>
+      </div>
+      <div class="sl">Tare Weights</div>
+      <div class="ref">
+        <div class="ref-r"><span class="rl">53' Dry Van</span><span class="rv">~13,500</span></div>
+        <div class="ref-r"><span class="rl">53' Reefer</span><span class="rv">~15,000</span></div>
+        <div class="ref-r"><span class="rl">48' Flatbed</span><span class="rv">~11,500</span></div>
+        <div class="ref-r"><span class="rl">Step Deck 53'</span><span class="rv">~11,000</span></div>
+        <div class="ref-r"><span class="rl">RGN</span><span class="rv">~14,000</span></div>
+        <div class="ref-r"><span class="rl">Hotshot 20'</span><span class="rv">~3,500</span></div>
+        <div class="ref-r"><span class="rl">Hotshot 30'</span><span class="rv">~4,000</span></div>
+        <div class="ref-r"><span class="rl">Hotshot 40'</span><span class="rv">~4,500</span></div>
+        <div class="ref-r"><span class="rl">Sprinter Van</span><span class="rv">~5,500</span></div>
+        <div class="ref-r"><span class="rl">Box Truck 26'</span><span class="rv">~11,000</span></div>
+      </div>
     </div>
 
-    <div class="sb-user">
-      <div class="user-avatar" id="sb-avatar">?</div>
-      <div>
-        <div class="user-info-name" id="sb-name">—</div>
-        <div class="user-info-role" id="sb-role">—</div>
+    <div style="border-top:0.5px solid var(--bd)">
+      <button class="nb" style="width:100%" onclick="doSignOut()"><i class="ti ti-logout"></i>Sign out</button>
+      <div class="sb-user">
+        <div class="user-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="user-info-name" id="sb-name">—</div>
+          <div class="user-info-role" id="sb-role">—</div>
+        </div>
       </div>
     </div>
   </div>
