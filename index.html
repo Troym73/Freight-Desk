@@ -683,6 +683,15 @@ async function loadApp(user) {
   const isAdmin = ADMIN_EMAILS.includes(user.email);
   currentProfile = { email: user.email, name: user.user_metadata?.full_name || user.email.split('@')[0], role: isAdmin ? 'admin' : 'broker' };
 
+  // Save/update profile in profiles table
+  await sb.from('profiles').upsert({
+    user_id: user.id,
+    email: user.email,
+    name: currentProfile.name,
+    role: currentProfile.role,
+    created_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+
   // Setup UI
   const initials = currentProfile.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('sb-avatar').textContent = initials;
@@ -983,13 +992,17 @@ async function loadAdminDashboard() {
   }
 
   // Load users
-  const { data: users } = await sb.auth.admin?.listUsers?.() || { data: null };
+  // Load all users from profiles table
+  const { data: profiles } = await sb.from('profiles').select('*').order('created_at', { ascending: true });
   const usersList = document.getElementById('users-list');
-  // Show based on known brokers from quotes + admin emails
-  const knownEmails = new Set([...Object.keys(brokers), ...ADMIN_EMAILS]);
+  const allProfiles = profiles || [];
+
+  // Merge with known brokers from quotes
+  const knownEmails = new Set([...Object.keys(brokers), ...ADMIN_EMAILS, ...allProfiles.map(p=>p.email)]);
   usersList.innerHTML = [...knownEmails].map(email=>{
     const isAdmin = ADMIN_EMAILS.includes(email);
-    const name = brokers[email]?.name || email.split('@')[0];
+    const profile = allProfiles.find(p=>p.email===email);
+    const name = profile?.name || brokers[email]?.name || email.split('@')[0];
     const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     return `<div class="user-row-item">
       <div class="broker-avatar">${initials}</div>
