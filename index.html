@@ -978,7 +978,7 @@ async function loadAdminDashboard() {
       const wr = b.quotes.length>0?Math.round((b.won.length/b.quotes.length)*100):0;
       const wrClass = wr>=60?'high':wr>=40?'mid':'low';
       const initials = b.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      const revWon = b.won.reduce((a,q)=>a+q.quote_total,0);
+      const revQuoted = b.quotes.reduce((a,q)=>a+q.quote_total,0);
       const margWon = b.won.reduce((a,q)=>a+q.gross_margin,0);
       return `<tr>
         <td><div class="name-cell"><div class="broker-avatar">${initials}</div>${b.name}</div></td>
@@ -986,7 +986,7 @@ async function loadAdminDashboard() {
         <td class="green">${b.won.length}</td>
         <td class="red">${b.lost.length}</td>
         <td><div class="wr-wrap"><div class="wr-bar"><div class="wr-fill ${wrClass}" style="width:${wr}%"></div></div><span class="wr-pct ${wrClass}">${wr}%</span></div></td>
-        <td class="amber">$${revWon.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+        <td class="amber">$${revQuoted.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
         <td class="green">$${margWon.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
       </tr>`;
     }).join('');
