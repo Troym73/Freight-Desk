@@ -875,6 +875,26 @@ function autoCalc() {
   };
 }
 
+function reopenQuote(id, lane, equipment, miles, marginPct) {
+  // Navigate to Rate & Quote tab
+  nav('rate');
+  // Fill in the load details
+  const parts = lane.split(' → ');
+  if (parts.length === 2) {
+    document.getElementById('loc-pu').value = parts[0];
+    document.getElementById('loc-del').value = parts[1];
+  }
+  if (miles) document.getElementById('miles').value = miles;
+  if (marginPct) document.getElementById('margin').value = marginPct;
+  // Match equipment
+  const equipSel = document.getElementById('equip');
+  if (equipSel && equipment) {
+    for (const opt of equipSel.options) {
+      if (opt.text === equipment) { equipSel.value = opt.value; break; }
+    }
+  }
+}
+
 // ── SAVE QUOTE ──
 async function saveQuote() {
   if (!lastQuoteData) { alert('Calculate a quote first.'); return; }
@@ -919,8 +939,15 @@ function renderMyQuotes(quotes) {
   if (!quotes.length) { list.innerHTML='<div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes yet. Build a quote in Rate & Quote and save it here.</div>'; return; }
   list.innerHTML = quotes.map(q=>`
     <div class="quote-card ${q.status==='won'?'won':q.status==='lost'?'lost':''}" id="qc-${q.id}">
-      <div class="qc-lane"><div class="ql">${q.lane||'—'}</div><div class="qe">${q.equipment||'—'}${q.miles?' · '+q.miles+' mi':''}</div></div>
-      <div class="qc-nums"><div class="qt">$${q.quote_total?.toLocaleString()}</div><div class="qm">$${q.gross_margin?.toLocaleString()} margin · ${q.margin_pct}%</div></div>
+      <div class="qc-lane" style="cursor:pointer" onclick="reopenQuote('${q.id}','${(q.lane||'').replace(/'/g,"\\'")}','${(q.equipment||'').replace(/'/g,"\\'")}',${q.miles||0},${q.margin_pct||0})">
+        <div class="ql">${q.lane||'—'} <span style="font-size:10px;color:var(--am);margin-left:4px">↗ reopen</span></div>
+        <div class="qe">${q.equipment||'—'}${q.miles?' · '+q.miles+' mi':''}</div>
+      </div>
+      <div class="qc-nums">
+        <div class="qt">$${q.quote_total?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px">carrier: $${q.carrier_base?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div class="qm">$${q.gross_margin?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} margin · ${q.margin_pct}%</div>
+      </div>
       <div class="qc-date">${formatDate(q.created_at)}</div>
       <div class="wl-toggle">
         <button class="wl-btn ${q.status==='won'?'won':''}" onclick="setQuoteStatus('${q.id}','won')"><i class="ti ti-check"></i> Won</button>
