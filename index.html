@@ -266,20 +266,24 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
           <h3><i class="ti ti-chart-line"></i>DAT RateView — Paste Your Numbers</h3>
           <div class="dat-row">
             <div class="field">
-              <label>30-Day (xmkt › reg) Total $</label>
-              <input type="number" id="d30" step="1" placeholder="e.g. 1727">
+              <label>7-Day Total $</label>
+              <input type="number" id="d30" step="1" placeholder="e.g. 1750">
             </div>
             <div class="field">
-              <label>60-Day (xmkt › xmkt) Total $</label>
-              <input type="number" id="d60" step="1" placeholder="e.g. 2014">
+              <label>15-Day Total $</label>
+              <input type="number" id="d60" step="1" placeholder="e.g. 1727">
             </div>
             <div class="field">
-              <label>1-Year (xmkt › xmkt) Total $</label>
-              <input type="number" id="d1y" step="1" placeholder="e.g. 1921">
+              <label>90-Day Total $</label>
+              <input type="number" id="d1y" step="1" placeholder="e.g. 1850">
             </div>
             <div class="field">
-              <label>+13M Forecast Total $</label>
-              <input type="number" id="d13m" step="1" placeholder="e.g. 1676">
+              <label>1-Year Total $</label>
+              <input type="number" id="d13m" step="1" placeholder="e.g. 1921">
+            </div>
+            <div class="field">
+              <label>35-Day Forecast Total $</label>
+              <input type="number" id="d35f" step="1" placeholder="e.g. 1676">
             </div>
           </div>
           <div id="trend-display" style="margin-top:12px;display:none">
@@ -289,7 +293,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
             </div>
             <div class="trend-bar"><div class="trend-fill" id="trend-fill" style="width:50%"></div></div>
             <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--tx3)">
-              <span>30-day low</span><span id="trend-range">—</span><span>13M high</span>
+              <span>7-day low</span><span id="trend-range">—</span><span>35-day forecast high</span>
             </div>
           </div>
         </div>
@@ -398,10 +402,10 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
             <div class="field">
               <label>Rate Basis</label>
               <select id="rate-basis">
-                <option value="w30">Weight toward 30-day (conservative)</option>
+                <option value="w30">Weight toward 7-day (aggressive)</option>
                 <option value="avg" selected>Straight average (balanced)</option>
                 <option value="w1y">Weight toward 1-year (historical)</option>
-                <option value="f13m">Use 13M forecast (aggressive)</option>
+                <option value="f13m">Use 35-day forecast</option>
               </select>
             </div>
           </div>
@@ -877,12 +881,13 @@ function getBasis() {
   const d60  = parseFloat(document.getElementById('d60').value)  || 0;
   const d1y  = parseFloat(document.getElementById('d1y').value)  || 0;
   const d13m = parseFloat(document.getElementById('d13m').value) || 0;
-  const vals = [d30,d60,d1y,d13m].filter(v=>v>0);
+  const d35f = parseFloat(document.getElementById('d35f').value) || 0;
+  const vals = [d30,d60,d1y,d13m,d35f].filter(v=>v>0);
   if(!vals.length) return 0;
   const basis = document.getElementById('rate-basis').value;
   if(basis==='w30')  return d30  || vals.reduce((a,b)=>a+b,0)/vals.length;
-  if(basis==='w1y')  return d1y  || vals.reduce((a,b)=>a+b,0)/vals.length;
-  if(basis==='f13m') return d13m || vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(basis==='w1y')  return d13m || vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(basis==='f13m') return d35f || vals.reduce((a,b)=>a+b,0)/vals.length;
   return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
 
@@ -891,6 +896,7 @@ function autoCalc() {
   const d60  = parseFloat(document.getElementById('d60').value)  || 0;
   const d1y  = parseFloat(document.getElementById('d1y').value)  || 0;
   const d13m = parseFloat(document.getElementById('d13m').value) || 0;
+  const d35f = parseFloat(document.getElementById('d35f').value) || 0;
   const miles = parseFloat(document.getElementById('miles').value) || 0;
   const fsc   = parseFloat(document.getElementById('fsc').value)  || 0;
   const acc   = parseFloat(document.getElementById('acc').value)  || 0;
@@ -898,7 +904,7 @@ function autoCalc() {
   const marginPct = parseFloat(document.getElementById('margin').value);
 
   // Trend display (comparing total $ values directly)
-  const vals = [d30,d60,d1y,d13m].filter(v=>v>0);
+  const vals = [d30,d60,d1y,d13m,d35f].filter(v=>v>0);
   const trendDiv = document.getElementById('trend-display');
   if(vals.length >= 2) {
     trendDiv.style.display='block';
@@ -908,8 +914,8 @@ function autoCalc() {
     document.getElementById('trend-fill').style.width = pct+'%';
     document.getElementById('trend-range').textContent = '$'+mn.toLocaleString()+' – $'+mx.toLocaleString();
     const tag = document.getElementById('trend-tag');
-    if(d13m > d30 && vals.length===4) { tag.textContent='↑ Rising market'; tag.className='tag up'; }
-    else if(d13m < d30 && vals.length===4) { tag.textContent='↓ Softening market'; tag.className='tag dn'; }
+    if(d35f > d30 && vals.length===5) { tag.textContent='↑ Rising market'; tag.className='tag up'; }
+    else if(d35f < d30 && vals.length===5) { tag.textContent='↓ Softening market'; tag.className='tag dn'; }
     else { tag.textContent='→ Stable market'; tag.className='tag flat'; }
   } else { trendDiv.style.display='none'; }
 
@@ -973,10 +979,11 @@ async function getAIQuote() {
   const prompt = `I am quoting a ${equip} load of ${miles||'unknown'} miles.
 
 DAT RateView data (TOTAL LOAD dollars, not per mile):
-- 30-Day (xmkt › reg): $${d30||'not provided'} total
-- 60-Day (xmkt › xmkt): $${d60||'not provided'} total
-- 1-Year (xmkt › xmkt): $${d1y||'not provided'} total
-- +13M Forecast: $${d13m||'not provided'} total
+- 7-Day: $${d30||'not provided'} total
+- 15-Day: $${d60||'not provided'} total
+- 90-Day: $${d1y||'not provided'} total
+- 1-Year: $${d13m||'not provided'} total
+- 35-Day Forecast: $${document.getElementById('d35f').value||'not provided'} total
 
 My target broker margin: ${margin}%
 Fuel surcharge: $${fsc||0}/mi
