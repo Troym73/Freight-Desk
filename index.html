@@ -698,13 +698,14 @@ table.bt td.red{color:var(--rd)}
     <!-- ADMIN DASHBOARD -->
     <div class="view" id="v-admin">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-shield-check" style="color:var(--am);margin-right:6px"></i>Admin Dashboard</h1>
-      <div class="admin-metrics" id="admin-metrics">
-        <div class="dash-metric"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
-        <div class="dash-metric"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
-        <div class="dash-metric"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
-        <div class="dash-metric"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
-        <div class="dash-metric"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
-      </div>
+      <div id="admin-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Quoted</div><div class="dm-val amber" id="adm-rev-quoted">$0</div></div>
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
+  <div class="dash-metric" style="text-align:center"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
+</div>
       <div class="broker-table-wrap">
         <div class="bt-header">Broker Performance — All Time</div>
         <table class="bt">
@@ -1294,6 +1295,7 @@ async function loadAdminDashboard() {
   document.getElementById('adm-won').textContent = won.length;
   document.getElementById('adm-winrate').textContent = all.length > 0 ? winRate+'%' : '—';
   document.getElementById('adm-revenue').textContent = '$'+won.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
+  document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
   document.getElementById('adm-margin').textContent = '$'+won.reduce((a,q)=>a+q.gross_margin,0).toLocaleString(undefined,{maximumFractionDigits:0});
 
   // Group by broker
