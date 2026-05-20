@@ -72,7 +72,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .ref{margin:6px 12px;border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
 .ref-h{padding:7px 11px;font-size:11px;font-weight:600;color:var(--tx2);background:var(--sf2);border-bottom:0.5px solid var(--bd)}
 .ref-r{display:flex;justify-content:space-between;align-items:center;padding:6px 11px;font-size:12px;border-bottom:0.5px solid var(--bd)}
-.rl{color:var(--tx3)}.rv{font-weight:500;color:var(--tx)}
+.rl{color:var(--tx2)}.rv{font-weight:600;color:var(--tx)}
 .sb-user{padding:12px 14px;border-top:0.5px solid var(--bd);display:flex;align-items:center;gap:10px}
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--am);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
 .user-info-name{font-size:13px;font-weight:500;color:var(--tx)}
@@ -117,17 +117,17 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .section-box h3 i{font-size:16px;color:var(--am)}
 .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .form-grid.two{grid-template-columns:repeat(2,1fr)}
-.field label{display:block;font-size:11px;font-weight:500;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
 .field input,.field select,.field textarea{width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none}
 .field input:focus,.field select:focus{border-color:var(--am)}
-.highlight-input{background:var(--am-lt)!important;border-color:var(--am-mid)!important}
+.highlight-input{background:var(--sf2)!important;border-color:var(--am-mid)!important;color:var(--tx)!important}
 .result-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .rcard{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:14px 16px}
 .rcard.highlight{background:var(--am-lt);border-color:var(--am-mid)}
 .rcard .rc-label{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .rcard .rc-val{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:-.5px}
 .rcard.highlight .rc-val{color:var(--am)}
-@media(prefers-color-scheme:dark){.rcard .rc-val{color:#f0eeea}.rcard.highlight .rc-val{color:#FAC775}}
+.rcard .rc-val{color:var(--tx)!important}.rcard.highlight .rc-val{color:var(--am)!important}
 .rcard .rc-sub{font-size:11px;color:var(--tx3);margin-top:4px}
 .calc-btn{width:100%;padding:11px;background:var(--am);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
 .calc-btn:hover{opacity:0.9}
@@ -161,8 +161,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .quote-card.won{border-color:#86efac;background:var(--gn-lt)}
 .quote-card.lost{border-color:#fca5a5;background:var(--rd-lt)}
 .qc-lane{flex:1}
-.qc-lane .ql{font-size:13px;font-weight:600;color:var(--tx)}
-.qc-lane .qe{font-size:11px;color:var(--tx3);margin-top:2px}
+.qc-lane .ql{font-size:13px;font-weight:600;color:var(--tx)!important}
+.qc-lane .qe{font-size:11px;color:var(--tx2);margin-top:2px}
 .qc-nums{text-align:right;min-width:100px}
 .qc-nums .qt{font-size:14px;font-weight:700;color:var(--am)}
 .qc-nums .qm{font-size:11px;color:var(--gn);margin-top:2px}
@@ -182,7 +182,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .bt-header{padding:12px 16px;border-bottom:0.5px solid var(--bd);font-size:13px;font-weight:600}
 table.bt{width:100%;border-collapse:collapse}
 table.bt th{font-size:11px;color:var(--tx3);text-align:left;padding:8px 14px;font-weight:500;border-bottom:0.5px solid var(--bd)}
-table.bt td{font-size:13px;color:var(--tx);padding:10px 14px;border-bottom:0.5px solid var(--bd)}
+table.bt td{font-size:13px;color:var(--tx)!important;padding:10px 14px;border-bottom:0.5px solid var(--bd)}
 table.bt tr:last-child td{border:none}
 table.bt td.amber{color:var(--am);font-weight:600}
 table.bt td.green{color:var(--gn)}
@@ -196,12 +196,12 @@ table.bt td.red{color:var(--rd)}
 .wr-pct{font-size:11px;font-weight:600;min-width:32px;text-align:right}
 .wr-pct.high{color:var(--gn)}.wr-pct.mid{color:var(--am)}.wr-pct.low{color:var(--rd)}
 .broker-avatar{width:28px;height:28px;border-radius:50%;background:var(--am-lt);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--am-dk);flex-shrink:0}
-.name-cell{display:flex;align-items:center;gap:8px}
+.name-cell{display:flex;align-items:center;gap:8px;color:var(--tx)}
 .users-wrap{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);overflow:hidden}
 .user-row-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--bd)}
 .user-row-item:last-child{border:none}
 .uri-info{flex:1}
-.uri-name{font-size:13px;font-weight:500;color:var(--tx)}
+.uri-name{font-size:13px;font-weight:600;color:var(--tx)!important}
 .uri-email{font-size:11px;color:var(--tx3)}
 .role-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
 .role-badge.admin{background:var(--am-lt);color:var(--am-dk)}
@@ -330,68 +330,94 @@ table.bt td.red{color:var(--rd)}
     </div>
 
     <!-- RATE & QUOTE -->
-    <div class="view" id="v-rate">
-      <div class="pv-header">
-        <h1><i class="ti ti-calculator" style="color:var(--am);margin-right:6px"></i>Rate & Quote</h1>
-      </div>
-      <div class="pv-body">
-        <div class="result-cards">
-          <div class="rcard highlight">
-            <div class="rc-label">Quote to Shipper</div>
-            <div class="rc-val" id="out-quote">—</div>
-            <div class="rc-sub" id="out-quote-pm">total load · enter miles for $/mi</div>
-          </div>
-          <div class="rcard">
-            <div class="rc-label">Total Truck Pay</div>
-            <div class="rc-val" id="out-carrier">—</div>
-            <div class="rc-sub" id="out-carrier-pm">total to carrier · enter miles for $/mi</div>
-          </div>
-          <div class="rcard">
-            <div class="rc-label">Gross Margin $</div>
-            <div class="rc-val" id="out-margin">—</div>
-            <div class="rc-sub" id="out-margin-pct">—% margin</div>
-          </div>
+    <div class="view" id="v-rate" style="padding:0;overflow-y:auto">
+
+      <!-- Sticky quote header -->
+      <div style="position:sticky;top:0;z-index:10;background:var(--am-lt);border-bottom:0.5px solid var(--am-mid);padding:12px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="text-align:center">
+          <div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Quote to Shipper</div>
+          <div style="font-size:26px;font-weight:800;color:var(--tx)" id="out-quote">—</div>
+          <div style="font-size:11px;color:var(--tx2);margin-top:2px" id="out-quote-pm">total load</div>
         </div>
+        <div style="text-align:center;border-left:0.5px solid var(--am-mid);border-right:0.5px solid var(--am-mid)">
+          <div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Total Truck Pay</div>
+          <div style="font-size:26px;font-weight:800;color:var(--tx)" id="out-carrier">—</div>
+          <div style="font-size:11px;color:var(--tx2);margin-top:2px" id="out-carrier-pm">total to carrier</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Gross Margin</div>
+          <div style="font-size:26px;font-weight:800;color:var(--gn)" id="out-margin">—</div>
+          <div style="font-size:11px;color:var(--tx2);margin-top:2px" id="out-margin-pct">—% margin</div>
+        </div>
+      </div>
+
+      <div style="padding:16px 20px">
 
         <div class="ai-result" id="ai-result">
           <div class="ar-head"><i class="ti ti-sparkles"></i>AI Quote Recommendation</div>
           <div class="ar-body" id="ai-result-body"></div>
         </div>
 
-        <!-- DAT -->
-        <div class="section-box">
-          <h3><i class="ti ti-chart-line"></i>DAT RateView — Paste Your Numbers</h3>
-          <div class="dat-row">
-            <div class="field"><label>7-Day Total $</label><input type="number" id="d30" step="1" placeholder="e.g. 1750"></div>
-            <div class="field"><label>15-Day Total $</label><input type="number" id="d60" step="1" placeholder="e.g. 1727"></div>
-            <div class="field"><label>90-Day Total $</label><input type="number" id="d1y" step="1" placeholder="e.g. 1850"></div>
-            <div class="field"><label>1-Year Total $</label><input type="number" id="d13m" step="1" placeholder="e.g. 1921"></div>
-            <div class="field"><label>35-Day Forecast Total $</label><input type="number" id="d35f" step="1" placeholder="e.g. 1676"></div>
-          </div>
-          <div id="trend-display" style="margin-top:12px;display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-              <span style="font-size:12px;color:var(--tx2)">Market trend</span>
-              <span class="tag" id="trend-tag">—</span>
-            </div>
-            <div class="trend-bar"><div class="trend-fill" id="trend-fill" style="width:50%"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--tx3)">
-              <span>7-day low</span><span id="trend-range">—</span><span>35-day forecast high</span>
-            </div>
-          </div>
-        </div>
+        <!-- Load Details with Google Maps + Multi-stop -->
+        <div class="section-box" style="border-color:var(--bl)">
+          <h3 style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-truck"></i>Load Details</span>
+            <span style="font-size:11px;color:var(--bl-lt);font-weight:400;display:flex;align-items:center;gap:4px"><i class="ti ti-map" style="color:var(--bl)"></i>Google Maps</span>
+          </h3>
 
-        <!-- Load Details -->
-        <div class="section-box">
-          <h3><i class="ti ti-truck"></i>Load Details</h3>
-          <div class="form-grid two" style="margin-bottom:10px">
-            <div class="field"><label>Pickup Location (City, State)</label><input type="text" id="loc-pu" placeholder="e.g. Chicago, IL"></div>
-            <div class="field"><label>Delivery Location (City, State)</label><input type="text" id="loc-del" placeholder="e.g. Nashville, TN"></div>
+          <!-- Route builder -->
+          <div id="route-builder" style="margin-bottom:10px">
+            <!-- Pickup -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--gn-lt);border:0.5px solid var(--gn);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--gn);flex-shrink:0">PU</div>
+              <div style="flex:1;position:relative">
+                <input type="text" id="loc-pu" placeholder="Pickup city, state" autocomplete="off" oninput="handleAutocomplete('pu',this.value)" style="width:100%;background:var(--sf2);border:0.5px solid var(--gn);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;box-sizing:border-box">
+                <div id="ac-pu" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:0.5px solid var(--bd2);border-radius:8px;z-index:100;overflow:hidden;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.2)"></div>
+              </div>
+            </div>
+            <!-- Connector -->
+            <div style="display:flex;margin-bottom:6px"><div style="width:30px;display:flex;justify-content:center"><div style="width:1px;height:14px;background:var(--bd2)"></div></div></div>
+            <!-- Stops container -->
+            <div id="stops-container"></div>
+            <!-- Delivery -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--bl-lt);border:0.5px solid var(--bl);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bl);flex-shrink:0">DEL</div>
+              <div style="flex:1;position:relative">
+                <input type="text" id="loc-del" placeholder="Delivery city, state" autocomplete="off" oninput="handleAutocomplete('del',this.value)" style="width:100%;background:var(--sf2);border:0.5px solid var(--bl);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;box-sizing:border-box">
+                <div id="ac-del" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:0.5px solid var(--bd2);border-radius:8px;z-index:100;overflow:hidden;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.2)"></div>
+              </div>
+            </div>
           </div>
-          <button class="calc-btn" onclick="lookupMiles()" id="miles-btn" style="margin-bottom:12px;background:var(--sf3);color:var(--tx);border:0.5px solid var(--bd2)">
-            <i class="ti ti-map-pin"></i>Calculate Mileage
+
+          <button id="add-stop-btn" onclick="addStop()" style="width:100%;padding:7px;background:var(--sf2);border:0.5px dashed var(--bd2);border-radius:7px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:8px">
+            <i class="ti ti-plus"></i>Add stop <span id="stop-count-label">(0 of 8)</span>
           </button>
+
+          <!-- Miles result -->
+          <div id="miles-result-box" style="display:none;padding:8px 12px;background:var(--bl-lt);border:0.5px solid var(--bl);border-radius:8px;margin-bottom:10px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:12px;color:var(--tx);font-weight:500" id="miles-route-text">—</div>
+                <div style="font-size:10px;color:var(--tx2);margin-top:1px">truck routing · Google Maps</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:18px;font-weight:800;color:var(--tx)" id="miles-result-num">— mi</div>
+                <div style="font-size:9px;color:var(--tx2)">exact miles</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stop charges total -->
+          <div id="stop-charges-row" style="display:none;padding:6px 10px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:6px;margin-bottom:10px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--tx2)">Stop charges total</span>
+            <span style="color:var(--tx);font-weight:600" id="stop-charges-total">$0</span>
+          </div>
+
           <div class="form-grid">
-            <div class="field"><label>Total Miles <span style="font-size:10px;color:var(--tx3)">(auto or manual)</span></label><input type="number" id="miles" placeholder="e.g. 450"></div>
+            <div class="field">
+              <label>Total Miles</label>
+              <input type="number" id="miles" placeholder="auto or manual">
+            </div>
             <div class="field"><label>Equipment Type</label>
               <select id="equip">
                 <optgroup label="Dry Van"><option>Dry Van 53'</option><option>Dry Van 48'</option><option>Dry Van 45'</option></optgroup>
@@ -407,7 +433,74 @@ table.bt td.red{color:var(--rd)}
             <div class="field"><label>Fuel Surcharge ($/mi)</label><input type="number" id="fsc" step="0.01" placeholder="e.g. 0.42"></div>
             <div class="field"><label>Accessorials ($)</label><input type="number" id="acc" placeholder="e.g. 150"></div>
             <div class="field"><label>Deadhead Miles</label><input type="number" id="dh" placeholder="e.g. 45"></div>
-            <div class="field"><label>Stops (beyond 1)</label><input type="number" id="stops" placeholder="e.g. 0"></div>
+          </div>
+        </div>
+
+        <!-- DAT -->
+        <div class="section-box">
+          <h3><i class="ti ti-chart-line"></i>DAT RateView</h3>
+          <div class="dat-row">
+            <div class="field"><label>7-Day $</label><input type="number" id="d30" step="1" placeholder="e.g. 1750"></div>
+            <div class="field"><label>15-Day $</label><input type="number" id="d60" step="1" placeholder="e.g. 1727"></div>
+            <div class="field"><label>90-Day $</label><input type="number" id="d1y" step="1" placeholder="e.g. 1850"></div>
+            <div class="field"><label>1-Year $</label><input type="number" id="d13m" step="1" placeholder="e.g. 1921"></div>
+            <div class="field"><label>35D Forecast $</label><input type="number" id="d35f" step="1" placeholder="e.g. 1676"></div>
+          </div>
+          <div id="trend-display" style="margin-top:12px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--tx2)">Market trend</span>
+              <span class="tag" id="trend-tag">—</span>
+            </div>
+            <div class="trend-bar"><div class="trend-fill" id="trend-fill" style="width:50%"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--tx3)">
+              <span>7-day low</span><span id="trend-range">—</span><span>35-day high</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Truckstop (optional) -->
+        <div class="section-box" style="border-color:#534AB7">
+          <h3 style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-truck"></i>Truckstop</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--sf2);color:var(--tx2);border:0.5px solid var(--bd);font-weight:400">optional</span>
+          </h3>
+          <p style="font-size:11px;color:var(--tx2);margin-bottom:10px"><i class="ti ti-info-circle" style="margin-right:4px"></i>Leave blank to use DAT only. Fill in to blend both sources.</p>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px">
+            <div class="field"><label>Low Posted $</label><input type="number" id="ts-low" placeholder="e.g. 980" oninput="calcTsAvg()"></div>
+            <div class="field"><label>High Posted $</label><input type="number" id="ts-high" placeholder="e.g. 1350" oninput="calcTsAvg()"></div>
+            <div class="field"><label>Avg Posted $</label><input type="number" id="ts-avg" readonly placeholder="auto-calculated"><div style="font-size:9px;color:var(--gn);margin-top:2px"><i class="ti ti-check"></i> auto from low + high</div></div>
+          </div>
+
+          <!-- Blend controls -->
+          <div id="blend-section" style="display:none;border-top:0.5px solid var(--bd);padding-top:12px;margin-top:4px">
+            <div style="font-size:11px;font-weight:600;color:var(--tx);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span><i class="ti ti-adjustments" style="margin-right:4px"></i>Blended Rate</span>
+              <span style="font-size:10px;color:var(--tx2);background:var(--sf2);border:0.5px solid #534AB7;border-radius:20px;padding:2px 8px">both sources active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+              <span style="font-size:11px;color:var(--tx);min-width:70px">DAT</span>
+              <div style="flex:1;height:5px;background:var(--sf3);border-radius:3px;overflow:hidden;display:flex"><div id="blend-dat-bar" style="height:100%;background:var(--am);transition:width .2s;width:50%"></div></div>
+              <span style="font-size:11px;font-weight:600;color:var(--tx);min-width:30px;text-align:right" id="blend-dat-pct">50%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:11px;color:var(--tx);min-width:70px">Truckstop</span>
+              <div style="flex:1;height:5px;background:var(--sf3);border-radius:3px;overflow:hidden;display:flex"><div id="blend-ts-bar" style="height:100%;background:var(--gn);transition:width .2s;width:50%"></div></div>
+              <span style="font-size:11px;font-weight:600;color:var(--tx);min-width:30px;text-align:right" id="blend-ts-pct">50%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx2);margin-bottom:4px">
+              <span>← Heavy DAT</span><span>Balanced</span><span>Heavy Truckstop →</span>
+            </div>
+            <input type="range" id="blend-slider" min="0" max="100" value="50" oninput="updateBlendSlider(this.value)" style="width:100%;margin-bottom:8px">
+            <div style="display:flex;gap:6px;margin-bottom:10px">
+              <button onclick="setBlendPreset(75,this)" style="flex:1;padding:5px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:6px;font-size:10px;color:var(--tx);cursor:pointer;font-family:inherit">DAT heavy<br>75/25</button>
+              <button onclick="setBlendPreset(50,this)" style="flex:1;padding:5px;background:var(--sf2);border:0.5px solid #534AB7;border-radius:6px;font-size:10px;color:var(--tx);cursor:pointer;font-family:inherit;font-weight:600">Balanced<br>50/50</button>
+              <button onclick="setBlendPreset(25,this)" style="flex:1;padding:5px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:6px;font-size:10px;color:var(--tx);cursor:pointer;font-family:inherit">TS heavy<br>25/75</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px;background:var(--sf2);border:0.5px solid #534AB7;border-radius:8px">
+              <div style="text-align:center"><div style="font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">DAT avg</div><div style="font-size:13px;font-weight:700;color:var(--tx)" id="blend-dat-val">—</div></div>
+              <div style="text-align:center;border-left:0.5px solid var(--bd);border-right:0.5px solid var(--bd)"><div style="font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Truckstop avg</div><div style="font-size:13px;font-weight:700;color:var(--tx)" id="blend-ts-val">—</div></div>
+              <div style="text-align:center"><div style="font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Blended rate</div><div style="font-size:13px;font-weight:700;color:var(--tx)" id="blend-result">—</div></div>
+            </div>
           </div>
         </div>
 
@@ -415,17 +508,17 @@ table.bt td.red{color:var(--rd)}
         <div class="section-box">
           <h3><i class="ti ti-percentage"></i>Margin & Rate Basis</h3>
           <div class="form-grid two" style="margin-bottom:12px">
-            <div class="field"><label>Target Margin %</label><input type="number" id="margin" placeholder="e.g. 15" class="highlight-input"></div>
+            <div class="field"><label>Target Margin %</label><input type="number" id="margin" placeholder="e.g. 15"></div>
             <div class="field"><label>Rate Basis</label>
               <select id="rate-basis">
-                <option value="w30">Weight toward 7-day (aggressive)</option>
+                <option value="w30">Weight toward 7-day</option>
                 <option value="avg" selected>Straight average (balanced)</option>
-                <option value="w1y">Weight toward 1-year (historical)</option>
+                <option value="w1y">Weight toward 1-year</option>
                 <option value="f13m">Use 35-day forecast</option>
               </select>
             </div>
           </div>
-          <button class="calc-btn" onclick="autoCalc()" style="margin-bottom:8px;background:var(--sf3);color:var(--tx);border:0.5px solid var(--bd2)">
+          <button class="calc-btn" onclick="autoCalc()" style="margin-bottom:8px;background:var(--sf2);color:var(--tx);border:0.5px solid var(--bd2)">
             <i class="ti ti-calculator"></i>Calculate Quote
           </button>
           <button class="calc-btn" onclick="saveQuote()" style="margin-bottom:8px;background:var(--gn);color:#fff;border:none">
@@ -505,8 +598,8 @@ table.bt td.red{color:var(--rd)}
             <div class="field"><label>Max Detention Cap ($)</label><input type="number" id="det-cap" placeholder="leave blank" oninput="detCalc()"></div>
             <div class="field"><label>Location</label><select id="det-loc" onchange="detCalc()"><option>Pickup</option><option>Delivery</option></select></div>
           </div>
-          <div class="det-result"><span style="font-size:12px;color:var(--tx2)">Total time on site</span><span style="font-weight:600" id="det-total">—</span></div>
-          <div class="det-result"><span style="font-size:12px;color:var(--tx2)">Billable detention time</span><span style="font-weight:600" id="det-bill">—</span></div>
+          <div class="det-result"><span style="font-size:12px;color:var(--tx)">Total time on site</span><span style="font-weight:600" id="det-total">—</span></div>
+          <div class="det-result"><span style="font-size:12px;color:var(--tx)">Billable detention time</span><span style="font-weight:600" id="det-bill">—</span></div>
           <div class="det-result" style="background:var(--am-lt)"><span style="font-size:12px;color:var(--am-dk)">Detention charge</span><span style="font-weight:700;color:var(--am)" id="det-charge">—</span></div>
           <button class="calc-btn" onclick="detCalc()"><i class="ti ti-calculator"></i>Calculate Detention</button>
         </div>
@@ -779,30 +872,185 @@ function apiCall(body) {
   return fetch('/.netlify/functions/claude', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
 }
 
-// ── MILEAGE LOOKUP ──
-async function lookupMiles() {
-  const pu = document.getElementById('loc-pu').value.trim();
-  const del = document.getElementById('loc-del').value.trim();
-  if (!pu || !del) { alert('Enter both a pickup and delivery location.'); return; }
-  const btn = document.getElementById('miles-btn');
-  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Calculating...'; btn.disabled = true;
-  const prompt = `What is the driving distance in miles between "${pu}" and "${del}" for a truck route in the United States? Respond ONLY with a single JSON object: {"miles":452}. Use standard trucking route miles. Round to nearest whole number. If unrecognizable, respond with {"miles":0}.`;
-  try {
-    const res = await apiCall({ model:'claude-sonnet-4-5', max_tokens:50, messages:[{role:'user',content:prompt}] });
-    const data = await res.json();
-    if (!res.ok) { alert('API error: '+(data.error?.message||res.status)); btn.innerHTML='<i class="ti ti-map-pin"></i>Calculate Mileage'; btn.disabled=false; return; }
-    const raw = data.content?.find(b=>b.type==='text')?.text||'';
-    const match = raw.match(/\{[^}]+\}/);
-    if (!match) { alert('Could not parse mileage. Enter manually.'); btn.innerHTML='<i class="ti ti-map-pin"></i>Calculate Mileage'; btn.disabled=false; return; }
-    const parsed = JSON.parse(match[0]);
-    if (parsed.miles > 0) document.getElementById('miles').value = parsed.miles;
-    else alert('"'+pu+'" or "'+del+'" not found. Check spelling and use City, State format.');
-  } catch(e) { alert('Mileage lookup failed: '+e.message+'. Enter miles manually.'); }
-  btn.innerHTML='<i class="ti ti-map-pin"></i>Calculate Mileage'; btn.disabled=false;
+// ── GOOGLE MAPS AUTOCOMPLETE ──
+let acTimer = null;
+let stopCount = 0;
+const MAX_STOPS = 8;
+let blendDatWeight = 50;
+
+async function handleAutocomplete(field, value) {
+  const drop = document.getElementById('ac-' + field);
+  if (!value || value.length < 2) { drop.style.display = 'none'; return; }
+  clearTimeout(acTimer);
+  acTimer = setTimeout(async () => {
+    try {
+      const res = await fetch('/.netlify/functions/maps', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'autocomplete', input: value })
+      });
+      const data = await res.json();
+      if (!data.suggestions || !data.suggestions.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = data.suggestions.map(s =>
+        `<div onclick="selectCity('${field}','${s.description.replace(/'/g,"\\'")}',this)" style="padding:9px 12px;font-size:13px;color:var(--tx);cursor:pointer;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background=''">`+
+        `<i class="ti ti-map-pin" style="font-size:14px;color:var(--tx2)"></i>${s.description}</div>`
+      ).join('');
+      drop.style.display = 'block';
+    } catch(e) { drop.style.display = 'none'; }
+  }, 300);
 }
 
-// ── RATE CALC ──
-function getBasis() {
+function selectCity(field, city, el) {
+  document.getElementById('loc-' + field).value = city;
+  document.getElementById('ac-' + field).style.display = 'none';
+  autoGetMiles();
+}
+
+// ── MULTI-STOP ──
+function addStop() {
+  if (stopCount >= MAX_STOPS) return;
+  stopCount++;
+  const container = document.getElementById('stops-container');
+  const stopDiv = document.createElement('div');
+  stopDiv.id = 'stop-wrap-' + stopCount;
+  stopDiv.innerHTML = `
+    <div style="display:flex;margin-bottom:4px"><div style="width:30px;display:flex;justify-content:center"><div style="width:1px;height:10px;background:var(--bd2)"></div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--am-lt);border:0.5px solid var(--am-mid);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--am);flex-shrink:0">${stopCount}</div>
+      <div style="flex:1;position:relative">
+        <input type="text" id="stop-city-${stopCount}" placeholder="Stop city, state" autocomplete="off" oninput="handleStopAC(${stopCount},this.value)" style="width:100%;background:var(--sf2);border:0.5px solid var(--am-mid);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none;box-sizing:border-box">
+        <div id="ac-stop-${stopCount}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sf);border:0.5px solid var(--bd2);border-radius:8px;z-index:100;overflow:hidden;margin-top:2px;box-shadow:0 4px 16px rgba(0,0,0,0.2)"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <span style="font-size:10px;color:var(--tx2)">Fee $</span>
+        <input type="number" id="stop-fee-${stopCount}" value="75" oninput="updateStopTotal()" style="width:60px;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:6px;padding:7px 8px;font-size:12px;color:var(--tx);font-family:inherit;text-align:right">
+      </div>
+      <button onclick="removeStop(${stopCount})" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;padding:2px;flex-shrink:0"><i class="ti ti-x"></i></button>
+    </div>`;
+  container.appendChild(stopDiv);
+  document.getElementById('stop-count-label').textContent = `(${stopCount} of ${MAX_STOPS})`;
+  document.getElementById('stop-charges-row').style.display = 'flex';
+  updateStopTotal();
+}
+
+async function handleStopAC(n, value) {
+  const drop = document.getElementById('ac-stop-' + n);
+  if (!value || value.length < 2) { drop.style.display = 'none'; return; }
+  clearTimeout(acTimer);
+  acTimer = setTimeout(async () => {
+    try {
+      const res = await fetch('/.netlify/functions/maps', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'autocomplete', input: value })
+      });
+      const data = await res.json();
+      if (!data.suggestions || !data.suggestions.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = data.suggestions.map(s =>
+        `<div onclick="selectStopCity(${n},'${s.description.replace(/'/g,"\\'")}',this)" style="padding:9px 12px;font-size:13px;color:var(--tx);cursor:pointer;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background=''">`+
+        `<i class="ti ti-map-pin" style="font-size:14px;color:var(--tx2)"></i>${s.description}</div>`
+      ).join('');
+      drop.style.display = 'block';
+    } catch(e) { drop.style.display = 'none'; }
+  }, 300);
+}
+
+function selectStopCity(n, city, el) {
+  document.getElementById('stop-city-' + n).value = city;
+  document.getElementById('ac-stop-' + n).style.display = 'none';
+  autoGetMiles();
+}
+
+function removeStop(n) {
+  const el = document.getElementById('stop-wrap-' + n);
+  if (el) el.remove();
+  stopCount--;
+  document.getElementById('stop-count-label').textContent = `(${stopCount} of ${MAX_STOPS})`;
+  if (stopCount === 0) document.getElementById('stop-charges-row').style.display = 'none';
+  updateStopTotal();
+  autoGetMiles();
+}
+
+function updateStopTotal() {
+  let total = 0;
+  for (let i = 1; i <= MAX_STOPS; i++) {
+    const fee = document.getElementById('stop-fee-' + i);
+    if (fee) total += parseFloat(fee.value) || 0;
+  }
+  const el = document.getElementById('stop-charges-total');
+  if (el) el.textContent = '$' + total.toLocaleString();
+}
+
+// ── AUTO MILES VIA GOOGLE MAPS ──
+let milesTimer = null;
+async function autoGetMiles() {
+  const pu = document.getElementById('loc-pu').value.trim();
+  const del = document.getElementById('loc-del').value.trim();
+  if (!pu || !del) return;
+  clearTimeout(milesTimer);
+  milesTimer = setTimeout(async () => {
+    const waypoints = [];
+    for (let i = 1; i <= MAX_STOPS; i++) {
+      const city = document.getElementById('stop-city-' + i);
+      if (city && city.value.trim()) waypoints.push(city.value.trim());
+    }
+    try {
+      const res = await fetch('/.netlify/functions/maps', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'distance', origin: pu, destination: del, waypoints })
+      });
+      const data = await res.json();
+      if (data.miles > 0) {
+        document.getElementById('miles').value = data.miles;
+        const routeBox = document.getElementById('miles-result-box');
+        const stopStr = waypoints.length ? waypoints.join(' → ') + ' → ' : '';
+        document.getElementById('miles-route-text').textContent = pu + ' → ' + stopStr + del;
+        document.getElementById('miles-result-num').textContent = data.miles.toLocaleString() + ' mi';
+        routeBox.style.display = 'block';
+      }
+    } catch(e) { console.log('Miles lookup failed:', e.message); }
+  }, 800);
+}
+
+// ── TRUCKSTOP BLEND ──
+function calcTsAvg() {
+  const low = parseFloat(document.getElementById('ts-low').value) || 0;
+  const high = parseFloat(document.getElementById('ts-high').value) || 0;
+  const blendSection = document.getElementById('blend-section');
+  if (low && high) {
+    const avg = Math.round((low + high) / 2);
+    document.getElementById('ts-avg').value = avg;
+    blendSection.style.display = 'block';
+    updateBlendDisplay();
+  } else {
+    blendSection.style.display = 'none';
+  }
+}
+
+function updateBlendSlider(val) {
+  blendDatWeight = parseInt(val);
+  updateBlendDisplay();
+}
+
+function setBlendPreset(w, btn) {
+  blendDatWeight = w;
+  document.getElementById('blend-slider').value = w;
+  updateBlendDisplay();
+}
+
+function updateBlendDisplay() {
+  const tsW = 100 - blendDatWeight;
+  document.getElementById('blend-dat-bar').style.width = blendDatWeight + '%';
+  document.getElementById('blend-ts-bar').style.width = tsW + '%';
+  document.getElementById('blend-dat-pct').textContent = blendDatWeight + '%';
+  document.getElementById('blend-ts-pct').textContent = tsW + '%';
+  const datAvg = getDatAvg();
+  const tsAvg = parseFloat(document.getElementById('ts-avg').value) || 0;
+  const blended = Math.round((datAvg * blendDatWeight / 100) + (tsAvg * tsW / 100));
+  document.getElementById('blend-dat-val').textContent = datAvg ? '$' + datAvg.toLocaleString() : '—';
+  document.getElementById('blend-ts-val').textContent = tsAvg ? '$' + tsAvg.toLocaleString() : '—';
+  document.getElementById('blend-result').textContent = blended ? '$' + blended.toLocaleString() : '—';
+}
+
+function getDatAvg() {
   const d30=parseFloat(document.getElementById('d30').value)||0;
   const d60=parseFloat(document.getElementById('d60').value)||0;
   const d1y=parseFloat(document.getElementById('d1y').value)||0;
@@ -817,17 +1065,35 @@ function getBasis() {
   return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
 
+// ── RATE CALC ──
+function getBasis() {
+  const datAvg = getDatAvg();
+  const tsAvg = parseFloat(document.getElementById('ts-avg').value) || 0;
+  if (tsAvg && datAvg) {
+    const tsW = 100 - blendDatWeight;
+    return Math.round((datAvg * blendDatWeight / 100) + (tsAvg * tsW / 100));
+  }
+  return datAvg;
+}
+
 function autoCalc() {
+  const miles=parseFloat(document.getElementById('miles').value)||0;
+  const fsc=parseFloat(document.getElementById('fsc').value)||0;
+  const acc=parseFloat(document.getElementById('acc').value)||0;
+  const marginPct=parseFloat(document.getElementById('margin').value);
   const d30=parseFloat(document.getElementById('d30').value)||0;
   const d60=parseFloat(document.getElementById('d60').value)||0;
   const d1y=parseFloat(document.getElementById('d1y').value)||0;
   const d13m=parseFloat(document.getElementById('d13m').value)||0;
   const d35f=parseFloat(document.getElementById('d35f').value)||0;
-  const miles=parseFloat(document.getElementById('miles').value)||0;
-  const fsc=parseFloat(document.getElementById('fsc').value)||0;
-  const acc=parseFloat(document.getElementById('acc').value)||0;
-  const stops=parseFloat(document.getElementById('stops').value)||0;
-  const marginPct=parseFloat(document.getElementById('margin').value);
+
+  // Stop charges from multi-stop
+  let stopCharges = 0;
+  for (let i = 1; i <= MAX_STOPS; i++) {
+    const fee = document.getElementById('stop-fee-' + i);
+    if (fee) stopCharges += parseFloat(fee.value) || 0;
+  }
+
   const vals=[d30,d60,d1y,d13m,d35f].filter(v=>v>0);
   const trendDiv=document.getElementById('trend-display');
   if(vals.length>=2){
@@ -841,6 +1107,7 @@ function autoCalc() {
     else if(d35f<d30&&vals.length===5){tag.textContent='↓ Softening market';tag.className='tag dn';}
     else{tag.textContent='→ Stable market';tag.className='tag flat';}
   } else { trendDiv.style.display='none'; }
+
   if(!marginPct||isNaN(marginPct)){
     document.getElementById('out-quote').textContent='—';
     document.getElementById('out-carrier').textContent='—';
@@ -848,31 +1115,35 @@ function autoCalc() {
     document.getElementById('out-margin-pct').textContent='—% margin';
     return;
   }
+
   const datTotal=getBasis(); if(!datTotal) return;
   const equip=document.getElementById('equip').value;
   let equipMultiplier=1.0;
   if(equip.startsWith('Hotshot'))equipMultiplier=0.50;
   else if(equip==='Sprinter Van')equipMultiplier=0.45;
   else if(equip.startsWith('Box Truck'))equipMultiplier=0.55;
+
   const adjustedDatTotal=datTotal*equipMultiplier;
-  const stopCharge=stops*75;
   const fscTotal=fsc*miles;
-  const carrierBase=adjustedDatTotal+fscTotal+acc+stopCharge;
+  const carrierBase=adjustedDatTotal+fscTotal+acc+stopCharges;
   const quoteTotal=carrierBase/(1-marginPct/100);
   const grossMargin=quoteTotal-carrierBase;
   const equipNote=equipMultiplier<1?' ('+Math.round(equipMultiplier*100)+'% rate adj.)':'';
+
   document.getElementById('out-quote').textContent='$'+quoteTotal.toFixed(2);
   document.getElementById('out-quote-pm').textContent=(miles?miles.toLocaleString()+' mi · ':'')+' total load'+equipNote;
   document.getElementById('out-carrier').textContent='$'+carrierBase.toFixed(2);
   document.getElementById('out-carrier-pm').textContent=(miles?miles.toLocaleString()+' mi · ':'')+' total to carrier'+equipNote;
   document.getElementById('out-margin').textContent='$'+grossMargin.toFixed(2);
   document.getElementById('out-margin-pct').textContent=marginPct.toFixed(1)+'% margin';
+
   lastQuoteData={
     lane:(document.getElementById('loc-pu').value||'?')+' → '+(document.getElementById('loc-del').value||'?'),
     equipment:equip, miles:miles, quote_total:parseFloat(quoteTotal.toFixed(2)),
     carrier_base:parseFloat(carrierBase.toFixed(2)), gross_margin:parseFloat(grossMargin.toFixed(2)),
     margin_pct:parseFloat(marginPct.toFixed(1)), status:'pending'
   };
+  updateBlendDisplay();
 }
 
 function reopenQuote(id, lane, equipment, miles, marginPct) {
@@ -1192,7 +1463,7 @@ async function lookupDims() {
 .tr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid var(--bd);font-size:13px}
 .tr-row:last-child{border:none}
 .tr-row.highlight{background:var(--am-lt)}
-.tr-row .tr-label{color:var(--tx2)}
+.tr-row .tr-label{color:var(--tx)}
 .tr-row .tr-val{font-weight:600;color:var(--tx)}
 .tr-row.highlight .tr-val{color:var(--am-dp)}
 .tr-row.highlight .tr-label{color:var(--am-dk)}
