@@ -1,15 +1,25 @@
 const https = require('https');
 
-function httpsGet(url) {
+function httpsPost(url, postData, headers) {
   return new Promise((resolve, reject) => {
-    https.get(url, res => {
+    const urlObj = new URL(url);
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: 'POST',
+      headers: headers
+    };
+    const req = https.request(options, res => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('JSON parse failed: ' + data)); }
+        catch(e) { reject(new Error('Parse error: ' + data)); }
       });
-    }).on('error', reject);
+    });
+    req.on('error', reject);
+    if (postData) req.write(postData);
+    req.end();
   });
 }
 
@@ -19,22 +29,4 @@ exports.handler = async function(event, context) {
   }
   const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
   if (!MAPS_KEY) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'No API key' }) };
-  }
-  try {
-    const { type, origin, destination, waypoints } = JSON.parse(event.body);
-    if (type === 'distance') {
-      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&units=imperial&mode=driving&key=${MAPS_KEY}`;
-      const data = await httpsGet(url);
-      // Return full Google response so we can debug
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ debug: data })
-      };
-    }
-    return { statusCode: 400, body: JSON.stringify({ error: 'Unknown type' }) };
-  } catch(err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
-  }
-};
+    return { statusCode: 500, body: JSON.stringify(
