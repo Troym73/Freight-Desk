@@ -2,24 +2,35 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-
   const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
   if (!MAPS_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Maps API key not configured.' }) };
   }
-
   try {
     const { type, input, origin, destination, waypoints } = JSON.parse(event.body);
 
-    // Autocomplete suggestions
+    // ── AUTOCOMPLETE (Places API New) ──
     if (type === 'autocomplete') {
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=(cities)&components=country:us&key=${MAPS_KEY}`;
-      const res = await fetch(url);
+      const res = await fetch(
+        `https://places.googleapis.com/v1/places:autocomplete`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': MAPS_KEY
+          },
+          body: JSON.stringify({
+            input,
+            includedRegionCodes: ['us'],
+            includedPrimaryTypes: ['locality', 'administrative_area_level_3']
+          })
+        }
+      );
       const data = await res.json();
-      const suggestions = (data.predictions || []).map(p => ({
-        description: p.description,
-        place_id: p.place_id
-      }));
+      const suggestions = (data.suggestions || []).map(s => ({
+        description: s.placePrediction?.text?.text || '',
+        place_id: s.placePrediction?.placeId || ''
+      })).filter(s => s.description);
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -27,28 +38,23 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // Distance Matrix - supports waypoints for multi-stop
+    // ── DISTANCE via Directions API (supports waypoints correctly) ──
     if (type === 'distance') {
       let waypointStr = '';
       if (waypoints && waypoints.length > 0) {
         waypointStr = `&waypoints=${waypoints.map(w => encodeURIComponent(w)).join('|')}`;
       }
-      const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}${waypointStr}&units=imperial&mode=driving&key=${MAPS_KEY}`;
-      const res = await fetch(url);
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypointStr}&units=imperial&mode=driving&key=${MAPS_KEY}`
+      );
       const data = await res.json();
-
-      // Sum up all leg distances for multi-stop routes
       let totalMiles = 0;
-      let routeDesc = '';
-      if (data.rows && data.rows[0] && data.rows[0].elements) {
-        data.rows[0].elements.forEach(el => {
-          if (el.status === 'OK') {
-            totalMiles += el.distance.value / 1609.344;
-          }
+      if (data.routes && data.routes[0] && data.routes[0].legs) {
+        data.routes[0].legs.forEach(leg => {
+          totalMiles += leg.distance.value / 1609.344;
         });
       }
       totalMiles = Math.round(totalMiles);
-
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -57,7 +63,6 @@ exports.handler = async function(event, context) {
     }
 
     return { statusCode: 400, body: JSON.stringify({ error: 'Unknown request type' }) };
-
   } catch (err) {
     return {
       statusCode: 500,
