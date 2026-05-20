@@ -40,33 +40,7 @@ exports.handler = async function(event, context) {
 
     // ── DISTANCE via Directions API (supports waypoints correctly) ──
     if (type === 'distance') {
-      let waypointStr = '';
-      if (waypoints && waypoints.length > 0) {
-        waypointStr = `&waypoints=${waypoints.map(w => encodeURIComponent(w)).join('|')}`;
-      }
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypointStr}&units=imperial&mode=driving&key=${MAPS_KEY}`
-      );
-      const data = await res.json();
-      let totalMiles = 0;
-      if (data.routes && data.routes[0] && data.routes[0].legs) {
-        data.routes[0].legs.forEach(leg => {
-          totalMiles += leg.distance.value / 1609.344;
-        });
-      }
-      totalMiles = Math.round(totalMiles);
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ miles: totalMiles })
-      };
-    }
-
-    return { statusCode: 400, body: JSON.stringify({ error: 'Unknown request type' }) };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Server error: ' + err.message })
-    };
-  }
-};
+      const clean = s => s.replace(/, USA$/, '').trim();
+      const cleanOrigin = clean(origin);
+      const cleanDest = clean(destination);
+      let waypointS
