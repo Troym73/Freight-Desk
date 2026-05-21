@@ -699,13 +699,13 @@ table.bt td.red{color:var(--rd)}
     <div class="view" id="v-admin">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-shield-check" style="color:var(--am);margin-right:6px"></i>Admin Dashboard</h1>
       <div id="admin-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Quoted</div><div class="dm-val amber" id="adm-rev-quoted">$0</div></div>
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
-  <div class="dash-metric" style="text-align:center"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
-</div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Quoted</div><div class="dm-val amber" id="adm-rev-quoted">$0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
+      </div>
       <div class="broker-table-wrap">
         <div class="bt-header">Broker Performance — All Time</div>
         <table class="bt">
@@ -1347,7 +1347,7 @@ async function loadAdminDashboard() {
       <div class="broker-avatar">${initials}</div>
       <div class="uri-info"><div class="uri-name">${name}</div><div class="uri-email">${email}</div></div>
       <span class="role-badge ${isAdmin?'admin':'broker'}">${isAdmin?'Admin':'Broker'}</span>
-      <button class="view-quotes-btn" onclick="viewBrokerQuotes('${email}','${name.replace(/'/g,"\\'")}')"><i class="ti ti-eye" style="font-size:12px;margin-right:3px"></i>Quotes${quoteCount?' ('+quoteCount+')':''}</button>
+      <button class="view-quotes-btn" onclick="viewBrokerQuotes('${email}','${name.replace(/'/g,"\\'")}')"  ><i class="ti ti-eye" style="font-size:12px;margin-right:3px"></i>Quotes${quoteCount?' ('+quoteCount+')':''}</button>
     </div>`;
   }).join('');
 }
@@ -1502,26 +1502,18 @@ async function viewBrokerQuotes(email, name) {
   document.getElementById('bq-modal-title').textContent = name + "'s Quotes";
   document.getElementById('bq-modal-body').innerHTML = '<div class="empty-state"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Loading...</div>';
   document.getElementById('bq-modal-bg').classList.add('show');
-
   const { data, error } = await sb.from('quotes').select('*').eq('user_email', email).order('created_at', { ascending: false });
   const quotes = data || [];
-
   const won = quotes.filter(q => q.status === 'won');
   const winRate = quotes.length > 0 ? Math.round((won.length / quotes.length) * 100) : 0;
   const revWon = won.reduce((a, q) => a + q.quote_total, 0);
   const margWon = won.reduce((a, q) => a + q.gross_margin, 0);
-
   document.getElementById('bq-total').textContent = quotes.length;
   document.getElementById('bq-winrate').textContent = quotes.length > 0 ? winRate + '%' : '—';
   document.getElementById('bq-revenue').textContent = '$' + revWon.toLocaleString(undefined, { maximumFractionDigits: 0 });
   document.getElementById('bq-margin').textContent = '$' + margWon.toLocaleString(undefined, { maximumFractionDigits: 0 });
-
   const body = document.getElementById('bq-modal-body');
-  if (!quotes.length) {
-    body.innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes saved yet.</div>';
-    return;
-  }
-
+  if (!quotes.length) { body.innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes saved yet.</div>'; return; }
   body.innerHTML = quotes.map(q => `
     <div class="quote-card ${q.status === 'won' ? 'won' : q.status === 'lost' ? 'lost' : ''}" style="margin-bottom:8px">
       <div class="qc-lane">
@@ -1538,15 +1530,8 @@ async function viewBrokerQuotes(email, name) {
     </div>
   `).join('');
 }
-
-function closeBrokerQuotes() {
-  document.getElementById('bq-modal-bg').classList.remove('show');
-}
-
-// Close on backdrop click
-document.addEventListener('click', e => {
-  if (e.target.id === 'bq-modal-bg') closeBrokerQuotes();
-});
+function closeBrokerQuotes() { document.getElementById('bq-modal-bg').classList.remove('show'); }
+document.addEventListener('click', e => { if (e.target.id === 'bq-modal-bg') closeBrokerQuotes(); });
 
 // ── TOOL RESULT STYLES ──
 </script>
@@ -1554,11 +1539,11 @@ document.addEventListener('click', e => {
 .tool-result{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
 .tr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid var(--bd);font-size:13px}
 .tr-row:last-child{border:none}
-.tr-row.highlight{background:var(--am-lt)}
+.tr-row.highlight{background:var(--am-mid)}
 .tr-row .tr-label{color:var(--tx)}
 .tr-row .tr-val{font-weight:600;color:var(--tx)}
-.tr-row.highlight .tr-val{color:var(--am-lt)}
-.tr-row.highlight .tr-label{color:var(--am-lt)}
+.tr-row.highlight .tr-val{color:#fff}
+.tr-row.highlight .tr-label{color:#fff}
 </style>
 </body>
 </html>
