@@ -207,6 +207,21 @@ table.bt td.red{color:var(--rd)}
 .role-badge.admin{background:var(--am-lt);color:var(--am-dk)}
 .role-badge.broker{background:var(--bl-lt);color:var(--bl)}
 .invite-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;font-size:13px;color:var(--am);cursor:pointer;border:none;background:none;font-family:inherit;border-top:0.5px dashed var(--am-mid);width:100%}
+.view-quotes-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--bl-lt);color:#93c5fd;border:0.5px solid var(--bl);cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap}
+.view-quotes-btn:hover{opacity:0.8}
+#bq-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center}
+#bq-modal-bg.show{display:flex}
+#bq-modal{background:var(--sf);border-radius:var(--rlg);border:0.5px solid var(--bd2);padding:0;width:680px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column}
+#bq-modal-header{padding:20px 24px 16px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#bq-modal-header h2{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+#bq-modal-header h2 i{color:var(--am)}
+#bq-modal-close{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:18px;padding:4px}
+#bq-modal-close:hover{color:var(--rd)}
+#bq-modal-stats{padding:12px 24px;border-bottom:0.5px solid var(--bd);display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex-shrink:0;background:var(--sf2)}
+.bq-stat{text-align:center}
+.bq-stat-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.bq-stat-val{font-size:16px;font-weight:700;color:var(--tx)}
+#bq-modal-body{overflow-y:auto;padding:16px 24px;flex:1}
 
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
@@ -634,6 +649,7 @@ table.bt td.red{color:var(--rd)}
               <option>TONU notice</option>
               <option>Layover notice</option>
               <option>Load tender</option>
+              <option>Carrier load details inquiry response</option>
               <option>Payment inquiry</option>
               <option>Document request</option>
             </select>
@@ -680,12 +696,13 @@ table.bt td.red{color:var(--rd)}
     <!-- ADMIN DASHBOARD -->
     <div class="view" id="v-admin">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-shield-check" style="color:var(--am);margin-right:6px"></i>Admin Dashboard</h1>
-      <div class="admin-metrics" id="admin-metrics">
-        <div class="dash-metric"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
-        <div class="dash-metric"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
-        <div class="dash-metric"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
-        <div class="dash-metric"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
-        <div class="dash-metric"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
+      <div id="admin-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Quoted</div><div class="dm-val amber" id="adm-rev-quoted">$0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
+        <div class="dash-metric" style="text-align:center"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
       </div>
       <div class="broker-table-wrap">
         <div class="bt-header">Broker Performance — All Time</div>
@@ -701,6 +718,25 @@ table.bt td.red{color:var(--rd)}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- BROKER QUOTES MODAL -->
+<div id="bq-modal-bg">
+  <div id="bq-modal">
+    <div id="bq-modal-header">
+      <h2><i class="ti ti-chart-bar"></i><span id="bq-modal-title">Broker Quotes</span></h2>
+      <button id="bq-modal-close" onclick="closeBrokerQuotes()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="bq-modal-stats">
+      <div class="bq-stat"><div class="bq-stat-label">Quoted</div><div class="bq-stat-val" id="bq-total">0</div></div>
+      <div class="bq-stat"><div class="bq-stat-label">Win Rate</div><div class="bq-stat-val" style="color:var(--bl)" id="bq-winrate">—</div></div>
+      <div class="bq-stat"><div class="bq-stat-label">Revenue Won</div><div class="bq-stat-val" style="color:var(--am)" id="bq-revenue">$0</div></div>
+      <div class="bq-stat"><div class="bq-stat-label">Margin Won</div><div class="bq-stat-val" style="color:var(--gn)" id="bq-margin">$0</div></div>
+    </div>
+    <div id="bq-modal-body">
+      <div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes yet.</div>
+    </div>
   </div>
 </div>
 
@@ -1244,6 +1280,42 @@ async function deleteQuote(id, lane) {
   if (currentProfile?.role === 'admin' || ADMIN_EMAILS.includes(currentUser?.email)) loadAdminDashboard();
 }
 
+async function viewBrokerQuotes(email, name) {
+  document.getElementById('bq-modal-title').textContent = name + "'s Quotes";
+  document.getElementById('bq-modal-body').innerHTML = '<div class="empty-state"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Loading...</div>';
+  document.getElementById('bq-modal-bg').classList.add('show');
+  const { data, error } = await sb.from('quotes').select('*').eq('user_email', email).order('created_at', { ascending: false });
+  const quotes = data || [];
+  const won = quotes.filter(q => q.status === 'won');
+  const winRate = quotes.length > 0 ? Math.round((won.length / quotes.length) * 100) : 0;
+  const revWon = won.reduce((a, q) => a + q.quote_total, 0);
+  const margWon = won.reduce((a, q) => a + q.gross_margin, 0);
+  document.getElementById('bq-total').textContent = quotes.length;
+  document.getElementById('bq-winrate').textContent = quotes.length > 0 ? winRate + '%' : '—';
+  document.getElementById('bq-revenue').textContent = '$' + revWon.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  document.getElementById('bq-margin').textContent = '$' + margWon.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const body = document.getElementById('bq-modal-body');
+  if (!quotes.length) { body.innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes saved yet.</div>'; return; }
+  body.innerHTML = quotes.map(q => `
+    <div class="quote-card ${q.status === 'won' ? 'won' : q.status === 'lost' ? 'lost' : ''}" style="margin-bottom:8px">
+      <div class="qc-lane">
+        <div class="ql">${q.lane || '—'}</div>
+        <div class="qe">${q.equipment || '—'}${q.miles ? ' · ' + q.miles + ' mi' : ''}</div>
+      </div>
+      <div class="qc-nums">
+        <div class="qt">$${q.quote_total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px">carrier: $${q.carrier_base?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div class="qm">$${q.gross_margin?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ${q.margin_pct}%</div>
+      </div>
+      <div class="qc-date">${formatDate(q.created_at)}</div>
+      <span style="font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;${q.status === 'won' ? 'background:var(--gn-lt);color:var(--gn)' : q.status === 'lost' ? 'background:var(--rd-lt);color:var(--rd)' : 'background:var(--sf3);color:var(--tx2)'}">${q.status === 'won' ? '✓ Won' : q.status === 'lost' ? '✗ Lost' : 'Pending'}</span>
+    </div>
+  `).join('');
+}
+
+function closeBrokerQuotes() { document.getElementById('bq-modal-bg').classList.remove('show'); }
+document.addEventListener('click', e => { if (e.target.id === 'bq-modal-bg') closeBrokerQuotes(); });
+
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -1266,6 +1338,7 @@ async function loadAdminDashboard() {
   document.getElementById('adm-won').textContent = won.length;
   document.getElementById('adm-winrate').textContent = all.length > 0 ? winRate+'%' : '—';
   document.getElementById('adm-revenue').textContent = '$'+won.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
+  document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
   document.getElementById('adm-margin').textContent = '$'+won.reduce((a,q)=>a+q.gross_margin,0).toLocaleString(undefined,{maximumFractionDigits:0});
 
   // Group by broker
@@ -1312,10 +1385,12 @@ async function loadAdminDashboard() {
     const profile = allProfiles.find(p=>p.email===email);
     const name = profile?.name || brokers[email]?.name || email.split('@')[0];
     const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const quoteCount = brokers[email]?.quotes?.length || 0;
     return `<div class="user-row-item">
       <div class="broker-avatar">${initials}</div>
       <div class="uri-info"><div class="uri-name">${name}</div><div class="uri-email">${email}</div></div>
       <span class="role-badge ${isAdmin?'admin':'broker'}">${isAdmin?'Admin':'Broker'}</span>
+      <button class="view-quotes-btn" onclick="viewBrokerQuotes('${email}','${name.replace(/'/g,"\'")}')">${quoteCount?'Quotes ('+quoteCount+')':'Quotes'}</button>
     </div>`;
   }).join('');
 }
@@ -1471,11 +1546,11 @@ async function lookupDims() {
 .tool-result{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
 .tr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid var(--bd);font-size:13px}
 .tr-row:last-child{border:none}
-.tr-row.highlight{background:var(--am-lt)}
+.tr-row.highlight{background:var(--am-mid)}
 .tr-row .tr-label{color:var(--tx)}
 .tr-row .tr-val{font-weight:600;color:var(--tx)}
-.tr-row.highlight .tr-val{color:var(--am-dp)}
-.tr-row.highlight .tr-label{color:var(--am-dk)}
+.tr-row.highlight .tr-val{color:#fff}
+.tr-row.highlight .tr-label{color:#fff}
 </style>
 </body>
 </html>
