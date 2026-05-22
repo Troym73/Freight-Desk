@@ -1437,6 +1437,7 @@ function renderQuoteCard(q) {
       <i class="ti ti-truck-delivery" style="font-size:13px;color:var(--am)"></i>
       <div style="flex:1"><div class="carrier-strip-name">${c.name}</div><div class="carrier-strip-mc">MC# ${c.mc}${c.email ? ' · '+c.email : ''}</div></div>
       ${sb2}
+      <button onclick="removeCarrierFromQuote('${q.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:2px 5px;margin-left:4px;border-radius:4px" title="Remove carrier"><i class="ti ti-x" style="font-size:13px"></i></button>
     </div>`;
   } else if (isWon && !q.carrier_mc) {
     carrierStrip = `<div class="assign-carrier-prompt">
@@ -1500,7 +1501,7 @@ function renderQuoteCard(q) {
         <button class="wl-btn ${q.status==='lost'?'lost':''}" onclick="setQuoteStatus('${q.id}','lost')"><i class="ti ti-x"></i> Lost</button>
       </div>
       ${isWon && q.load_number ? `<button onclick="editClosedNumbers('${q.id}')" style="font-size:11px;padding:4px 9px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd2);color:var(--tx2);cursor:pointer;font-family:inherit"><i class="ti ti-edit" style="font-size:12px;margin-right:3px"></i>Edit closed #s</button>` : ''}
-      <button onclick="deleteQuote('${q.id}','${(q.lane||'').replace(/'/g,"\'")}')}" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:4px 6px;border-radius:6px;flex-shrink:0;margin-left:auto" title="Delete"><i class="ti ti-trash" style="font-size:15px"></i></button>
+      <button onclick="handleDeleteQuote(this)" data-id="${q.id}" data-lane="${(q.lane||'').replace(/'/g,'')}" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:4px 6px;border-radius:6px;flex-shrink:0;margin-left:auto" title="Delete"><i class="ti ti-trash" style="font-size:15px"></i></button>
     </div>
   </div>`;
 }
@@ -1510,6 +1511,12 @@ async function setQuoteStatus(id, status) {
   if (error) { alert('Error: '+error.message); return; }
   loadMyQuotes();
   if (currentProfile?.role === 'admin' || ADMIN_EMAILS.includes(currentUser?.email)) loadAdminDashboard();
+}
+
+function handleDeleteQuote(btn) {
+  const id = btn.getAttribute('data-id');
+  const lane = btn.getAttribute('data-lane');
+  deleteQuote(id, lane);
 }
 
 async function deleteQuote(id, lane) {
@@ -1992,6 +1999,13 @@ async function selectCarrierForQuote(mc) {
   const { error } = await sb.from('quotes').update({ carrier_mc: mc }).eq('id', carrierPickerQuoteId);
   if (error) { alert('Error assigning carrier: ' + error.message); return; }
   closeCarrierPicker();
+  loadMyQuotes();
+}
+
+async function removeCarrierFromQuote(quoteId) {
+  if (!confirm('Remove the assigned carrier from this quote?')) return;
+  const { error } = await sb.from('quotes').update({ carrier_mc: null }).eq('id', quoteId);
+  if (error) { alert('Error removing carrier: ' + error.message); return; }
   loadMyQuotes();
 }
 
