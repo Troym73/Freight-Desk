@@ -1456,6 +1456,10 @@ function renderQuoteCard(q) {
         <div><div class="wf-label">Pickup Appointment</div><input class="wf-input" type="datetime-local" id="pu-appt-${q.id}"></div>
         <div><div class="wf-label">Delivery Appointment</div><input class="wf-input" type="datetime-local" id="del-appt-${q.id}"></div>
       </div>
+      <div style="margin-bottom:8px">
+        <div class="wf-label">Load Notes</div>
+        <textarea class="wf-input" id="notes-${q.id}" placeholder="e.g. Tarps needed, PU FCFS, Team load, Hazmat, Touch freight..." style="height:56px;resize:none;line-height:1.5"></textarea>
+      </div>
       <div style="display:flex;gap:6px;margin-top:4px">
         <button onclick="openCarrierPicker('${q.id}')" style="flex:1;padding:7px;background:var(--sf);border:0.5px solid var(--bd2);border-radius:7px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
           <i class="ti ti-truck-delivery" style="font-size:13px"></i>${q.carrier_mc && carriersDB[q.carrier_mc] ? carriersDB[q.carrier_mc].name : '+ Assign Carrier'}
@@ -1484,6 +1488,7 @@ function renderQuoteCard(q) {
       <div class="qc-lane" style="flex:1">
         <div class="ql" style="cursor:pointer" onclick="reopenQuote('${q.id}','${(q.lane||'').replace(/'/g,"\'")}','${(q.equipment||'').replace(/'/g,"\'")}',${q.miles||0},${q.margin_pct||0})">${q.lane||'—'} <span style="font-size:10px;color:var(--am);margin-left:4px">↗ reopen</span></div>
         <div class="qe">${q.equipment||'—'}${q.miles?' · '+q.miles+' mi':''}${q.pu_appt?' · PU '+formatAppt(q.pu_appt):''}${q.del_appt?' · DEL '+formatAppt(q.del_appt):''}</div>
+        ${q.load_notes ? `<div style="font-size:11px;color:var(--am);margin-top:3px;display:flex;align-items:center;gap:4px"><i class="ti ti-notes" style="font-size:11px"></i>${q.load_notes}</div>` : ''}
       </div>
       <div class="qc-nums">
         <div class="qt">$${displayQuote?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
@@ -2021,11 +2026,13 @@ async function saveLoadDetails(quoteId) {
   const puAppt = document.getElementById('pu-appt-' + quoteId)?.value;
   const delAppt = document.getElementById('del-appt-' + quoteId)?.value;
   if (!loadNum) { alert('Please enter a load number.'); return; }
+  const notes = document.getElementById('notes-' + quoteId)?.value?.trim();
   const updates = {
     load_number: loadNum,
     shipper_ref: shipperRef || null,
     pu_appt: puAppt || null,
     del_appt: delAppt || null,
+    load_notes: notes || null,
   };
   const { error } = await sb.from('quotes').update(updates).eq('id', quoteId);
   if (error) { alert('Error saving load details: ' + error.message); return; }
