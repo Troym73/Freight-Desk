@@ -157,7 +157,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .dm-val.green{color:var(--gn)}
 .dm-val.blue{color:var(--bl)}
 .quotes-list{display:flex;flex-direction:column;gap:8px}
-.quote-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.quote-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.quote-card-row{display:flex;align-items:center;gap:12px}
 .quote-card.won{border-color:#86efac;background:var(--gn-lt)}
 .quote-card.lost{border-color:#fca5a5;background:var(--rd-lt)}
 .qc-lane{flex:1}
@@ -1384,25 +1385,124 @@ function renderMyQuotes(quotes) {
   document.getElementById('my-revenue').textContent = '$'+revWon.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
   document.getElementById('my-margin-total').textContent = '$'+margWon.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
   if (!quotes.length) { list.innerHTML='<div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes yet. Build a quote in Rate & Quote and save it here.</div>'; return; }
-  list.innerHTML = quotes.map(q=>`
-    <div class="quote-card ${q.status==='won'?'won':q.status==='lost'?'lost':''}" id="qc-${q.id}">
-      <div class="qc-lane" style="cursor:pointer" onclick="reopenQuote('${q.id}','${(q.lane||'').replace(/'/g,"\\'")}','${(q.equipment||'').replace(/'/g,"\\'")}',${q.miles||0},${q.margin_pct||0})">
-        <div class="ql">${q.lane||'—'} <span style="font-size:10px;color:var(--am);margin-left:4px">↗ reopen</span></div>
-        <div class="qe">${q.equipment||'—'}${q.miles?' · '+q.miles+' mi':''}</div>
+  // Split quotes into sections
+  const activeLoads = quotes.filter(q => q.status === 'won' && q.load_number);
+  const wonNoLoad = quotes.filter(q => q.status === 'won' && !q.load_number);
+  const pending = quotes.filter(q => q.status !== 'won');
+
+  let html = '';
+  if (activeLoads.length) {
+    html += '<div class="section-divider">Active Loads</div>';
+    html += activeLoads.map(q => renderQuoteCard(q)).join('');
+  }
+  if (wonNoLoad.length) {
+    html += '<div class="section-divider">Won — Assign Load Details</div>';
+    html += wonNoLoad.map(q => renderQuoteCard(q)).join('');
+  }
+  if (pending.length) {
+    if (activeLoads.length || wonNoLoad.length) html += '<div class="section-divider">Pending Quotes</div>';
+    html += pending.map(q => renderQuoteCard(q)).join('');
+  }
+  list.innerHTML = html;
+}
+
+function formatAppt(dt) {
+  if (!dt) return '';
+  try {
+    const d = new Date(dt);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  } catch(e) { return ''; }
+}
+
+function renderQuoteCard(q) {
+  const isWon = q.status === 'won';
+  const isLost = q.status === 'lost';
+  const hasLoad = isWon && q.load_number;
+
+  const loadBar = hasLoad ? `
+    <div class="load-num-bar">
+      <i class="ti ti-hash" style="font-size:12px;color:var(--tx3)"></i>
+      <span class="load-num-tag">${q.load_number}</span>
+      ${q.shipper_ref ? `<span class="load-ref-tag">· Shipper ref: ${q.shipper_ref}</span>` : ''}
+      <span style="margin-left:auto;font-size:10px;padding:2px 7px;border-radius:20px;background:var(--gn-lt);color:var(--gn);font-weight:600">✓ Won</span>
+    </div>` : '';
+
+  let carrierStrip = '';
+  if (q.carrier_mc && carriersDB[q.carrier_mc]) {
+    const c = carriersDB[q.carrier_mc];
+    const sb2 = c.status === 'approved'
+      ? '<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--gn-lt);color:var(--gn);border:0.5px solid var(--gn);font-weight:600">✓ Approved</span>'
+      : '<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--am-lt);color:var(--am);border:0.5px solid var(--am-mid);font-weight:600">📋 Send CP</span>';
+    carrierStrip = `<div class="carrier-strip">
+      <i class="ti ti-truck-delivery" style="font-size:13px;color:var(--am)"></i>
+      <div style="flex:1"><div class="carrier-strip-name">${c.name}</div><div class="carrier-strip-mc">MC# ${c.mc}${c.email ? ' · '+c.email : ''}</div></div>
+      ${sb2}
+    </div>`;
+  } else if (isWon && !q.carrier_mc) {
+    carrierStrip = `<div class="assign-carrier-prompt">
+      <i class="ti ti-truck-delivery" style="font-size:13px"></i>
+      <span>No carrier assigned</span>
+      <button class="assign-carrier-btn" onclick="openCarrierPicker('${q.id}')">+ Assign carrier</button>
+    </div>`;
+  }
+
+  const wonForm = isWon && !q.load_number ? `
+    <div class="won-details-form">
+      <div class="won-details-title"><i class="ti ti-circle-check" style="font-size:13px"></i>Assign Load Details</div>
+      <div class="won-form-grid">
+        <div><div class="wf-label">Load Number</div><input class="wf-input" type="text" id="ln-${q.id}" placeholder="e.g. LD-2024-0847"></div>
+        <div><div class="wf-label">Shipper Reference</div><input class="wf-input" type="text" id="sr-${q.id}" placeholder="e.g. PO-55219"></div>
+        <div><div class="wf-label">Pickup Appointment</div><input class="wf-input" type="datetime-local" id="pu-appt-${q.id}"></div>
+        <div><div class="wf-label">Delivery Appointment</div><input class="wf-input" type="datetime-local" id="del-appt-${q.id}"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button onclick="openCarrierPicker('${q.id}')" style="flex:1;padding:7px;background:var(--sf);border:0.5px solid var(--bd2);border-radius:7px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-truck-delivery" style="font-size:13px"></i>${q.carrier_mc && carriersDB[q.carrier_mc] ? carriersDB[q.carrier_mc].name : '+ Assign Carrier'}
+        </button>
+        <button onclick="saveLoadDetails('${q.id}')" style="flex:1;padding:7px;background:var(--am);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-device-floppy" style="font-size:13px"></i>Save Load Details
+        </button>
+      </div>
+    </div>` : '';
+
+  const finalRateRow = q.final_quote_total ? `
+    <div style="display:flex;gap:8px;font-size:11px;padding:4px 0;border-top:0.5px solid var(--bd)">
+      <span style="color:var(--tx3)">Quoted:</span>
+      <span style="color:var(--tx2);text-decoration:line-through">$${q.quote_total?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+      <span style="color:var(--tx3);margin-left:4px">Closed:</span>
+      <span style="color:var(--am);font-weight:600">$${q.final_quote_total?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    </div>` : '';
+
+  const displayQuote = q.final_quote_total || q.quote_total;
+  const displayCarrier = q.final_carrier_pay || q.carrier_base;
+  const displayMargin = q.final_quote_total ? (q.final_quote_total - (q.final_carrier_pay || q.carrier_base)) : q.gross_margin;
+
+  return `<div class="quote-card ${isWon?'won':isLost?'lost':''}" id="qc-${q.id}">
+    ${loadBar}
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div class="qc-lane" style="flex:1">
+        <div class="ql" style="cursor:pointer" onclick="reopenQuote('${q.id}','${(q.lane||'').replace(/'/g,"\'")}','${(q.equipment||'').replace(/'/g,"\'")}',${q.miles||0},${q.margin_pct||0})">${q.lane||'—'} <span style="font-size:10px;color:var(--am);margin-left:4px">↗ reopen</span></div>
+        <div class="qe">${q.equipment||'—'}${q.miles?' · '+q.miles+' mi':''}${q.pu_appt?' · PU '+formatAppt(q.pu_appt):''}${q.del_appt?' · DEL '+formatAppt(q.del_appt):''}</div>
       </div>
       <div class="qc-nums">
-        <div class="qt">$${q.quote_total?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-        <div style="font-size:11px;color:var(--tx2);margin-top:2px">carrier: $${q.carrier_base?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-        <div class="qm">$${q.gross_margin?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} margin · ${q.margin_pct}%</div>
+        <div class="qt">$${displayQuote?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px">carrier: $${displayCarrier?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div class="qm">$${displayMargin?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} · ${q.margin_pct}%</div>
       </div>
       <div class="qc-date">${formatDate(q.created_at)}</div>
+    </div>
+    ${finalRateRow}
+    ${carrierStrip}
+    ${wonForm}
+    <div style="display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--bd);padding-top:6px;flex-wrap:wrap">
       <div class="wl-toggle">
         <button class="wl-btn ${q.status==='won'?'won':''}" onclick="setQuoteStatus('${q.id}','won')"><i class="ti ti-check"></i> Won</button>
         <button class="wl-btn ${q.status==='lost'?'lost':''}" onclick="setQuoteStatus('${q.id}','lost')"><i class="ti ti-x"></i> Lost</button>
       </div>
-      <button onclick="deleteQuote('${q.id}','${(q.lane||'').replace(/'/g,"\'")}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:4px 6px;border-radius:6px;flex-shrink:0" title="Delete quote"><i class="ti ti-trash" style="font-size:15px"></i></button>
+      ${isWon && q.load_number ? `<button onclick="editClosedNumbers('${q.id}')" style="font-size:11px;padding:4px 9px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd2);color:var(--tx2);cursor:pointer;font-family:inherit"><i class="ti ti-edit" style="font-size:12px;margin-right:3px"></i>Edit closed #s</button>` : ''}
+      <button onclick="deleteQuote('${q.id}','${(q.lane||'').replace(/'/g,"\'")}')}" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:4px 6px;border-radius:6px;flex-shrink:0;margin-left:auto" title="Delete"><i class="ti ti-trash" style="font-size:15px"></i></button>
     </div>
-  `).join('');
+  </div>`;
 }
 
 async function setQuoteStatus(id, status) {
