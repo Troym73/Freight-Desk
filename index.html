@@ -27,7 +27,7 @@
   --gn-lt:#052e16;--rd-lt:#450a0a;--bl-lt:#1e3a5f;
 }}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
- 
+
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);padding:20px}
 #login-screen.hidden{display:none}
@@ -46,11 +46,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .login-btn:disabled{opacity:0.6;cursor:not-allowed}
 .login-err{font-size:12px;color:var(--rd);margin-top:10px;text-align:center;display:none}
 .login-forgot{font-size:12px;color:var(--am);text-align:center;margin-top:12px;cursor:pointer}
- 
+
 /* ── APP ── */
 #app{display:flex;height:100vh;overflow:hidden}
 #app.hidden{display:none}
- 
+
 /* ── SIDEBAR ── */
 #sb{width:244px;min-width:244px;background:var(--sf);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
 #sb-scroll{flex:1;overflow-y:auto}
@@ -79,12 +79,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .user-info-role{font-size:11px;color:var(--tx3)}
 .signout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--tx3);padding:4px}
 .signout-btn:hover{color:var(--rd)}
- 
+
 /* ── MAIN ── */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .view{position:absolute;inset:0;overflow-y:auto;padding:20px;display:none}
 .view.active{display:block}
- 
+
 /* ── CHAT ── */
 #v-chat{padding:0;display:none;flex-direction:column;position:absolute;inset:0}
 #v-chat.active{display:flex}
@@ -104,7 +104,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 #chat-input{flex:1;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--tx);font-family:inherit;resize:none;height:42px;outline:none}
 #chat-input:focus{border-color:var(--am)}
 #send-btn{background:var(--am);color:#fff;border:none;border-radius:10px;width:42px;height:42px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
- 
+
 /* ── RATE & QUOTE ── */
 .pv-header{padding:18px 20px 0;border-bottom:0.5px solid var(--bd);background:var(--sf)}
 .pv-header h1{font-size:17px;font-weight:600;margin-bottom:14px}
@@ -142,11 +142,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .tag{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500}
 .tag.up{background:var(--gn-lt);color:var(--gn)}.tag.dn{background:var(--rd-lt);color:var(--rd)}.tag.flat{background:var(--sf3);color:var(--tx2)}
 .weight-warn{background:var(--rd-lt);border:0.5px solid var(--rd);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--rd);display:none;margin-bottom:12px}
- 
+
 /* ── BROKER TOOLS ── */
 .det-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 .det-result{background:var(--sf3);border-radius:var(--r);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
- 
+
 /* ── MY QUOTES / DASHBOARD ── */
 #v-quotes{padding:20px}
 .dash-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
@@ -174,7 +174,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .wl-btn.lost{background:#fee2e2;color:#b91c1c}
 .empty-state{text-align:center;padding:48px 20px;color:var(--tx3)}
 .empty-state i{font-size:40px;margin-bottom:12px;display:block}
- 
+
 /* ── ADMIN DASHBOARD ── */
 #v-admin{padding:20px}
 .admin-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
@@ -222,7 +222,7 @@ table.bt td.red{color:var(--rd)}
 .bq-stat-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .bq-stat-val{font-size:16px;font-weight:700;color:var(--tx)}
 #bq-modal-body{overflow-y:auto;padding:16px 24px;flex:1}
- 
+
 /* ── CARRIERS ── */
 .carrier-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:14px 16px;margin-bottom:10px}
 .carrier-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:10px}
@@ -249,7 +249,44 @@ table.bt td.red{color:var(--rd)}
 .mc-search-row input:focus{border-color:var(--am)}
 .mc-search-row button{background:var(--am);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .carriers-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
- 
+
+/* ── LOAD NUMBER SYSTEM ── */
+.load-num-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf3);border-radius:6px;margin-bottom:8px;border:0.5px solid var(--bd2);flex-wrap:wrap}
+.load-num-tag{font-size:11px;font-weight:700;color:var(--am);font-family:monospace;letter-spacing:.03em}
+.load-ref-tag{font-size:10px;color:var(--tx3)}
+.carrier-strip{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:6px;margin-bottom:8px;border:0.5px solid var(--bd)}
+.carrier-strip-name{font-size:12px;font-weight:600;color:var(--tx)}
+.carrier-strip-mc{font-size:10px;color:var(--tx3)}
+.assign-carrier-prompt{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sf2);border-radius:6px;margin-bottom:8px;border:0.5px dashed var(--bd2);font-size:11px;color:var(--tx3)}
+.assign-carrier-btn{font-size:11px;padding:3px 9px;border-radius:6px;border:0.5px solid var(--am-mid);background:var(--am-lt);color:var(--am);cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:auto}
+.won-details-form{background:var(--sf2);border:0.5px solid var(--am-mid);border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.won-details-title{font-size:11px;font-weight:600;color:var(--am);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.won-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.won-form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.wf-label{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.wf-input{width:100%;background:var(--sf);border:0.5px solid var(--bd2);border-radius:6px;padding:6px 9px;font-size:12px;color:var(--tx);font-family:inherit;outline:none}
+.wf-input:focus{border-color:var(--am)}
+.section-divider{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 6px;display:flex;align-items:center;gap:6px}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:0.5px;background:var(--bd)}
+
+/* ── CARRIER PICKER MODAL ── */
+#carrier-picker-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center}
+#carrier-picker-bg.show{display:flex}
+#carrier-picker{background:var(--sf);border-radius:var(--rlg);border:0.5px solid var(--bd2);width:540px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column}
+#carrier-picker-header{padding:16px 20px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#carrier-picker-header h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px}
+#carrier-picker-header h3 i{color:var(--am)}
+#carrier-picker-search{padding:10px 20px;border-bottom:0.5px solid var(--bd);flex-shrink:0}
+#carrier-picker-search input{width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--tx);font-family:inherit;outline:none}
+#carrier-picker-search input:focus{border-color:var(--am)}
+#carrier-picker-list{overflow-y:auto;flex:1;padding:8px 0}
+.cp-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;border-bottom:0.5px solid var(--bd)}
+.cp-item:hover{background:var(--sf2)}
+.cp-item:last-child{border:none}
+.cp-item-info{flex:1}
+.cp-item-name{font-size:13px;font-weight:600;color:var(--tx)}
+.cp-item-mc{font-size:11px;color:var(--tx3)}
+
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
 #modal-bg.show{display:flex}
@@ -266,7 +303,7 @@ table.bt td.red{color:var(--rd)}
 </style>
 </head>
 <body>
- 
+
 <!-- ── LOGIN SCREEN ── -->
 <div id="login-screen">
   <div class="login-wrap">
@@ -291,10 +328,10 @@ table.bt td.red{color:var(--rd)}
     </div>
   </div>
 </div>
- 
+
 <!-- ── MAIN APP ── -->
 <div id="app" class="hidden">
- 
+
   <!-- SIDEBAR -->
   <div id="sb">
     <div class="sb-top">
@@ -306,7 +343,7 @@ table.bt td.red{color:var(--rd)}
       </div>
       <div class="online"><span class="dot"></span>Agent online</div>
     </div>
- 
+
     <div class="sl">Tools</div>
     <button class="nb active" onclick="nav('chat')" id="n-chat"><i class="ti ti-message-circle"></i>AI Assistant</button>
     <button class="nb" onclick="nav('rate')" id="n-rate"><i class="ti ti-calculator"></i>Rate & Quote</button>
@@ -315,7 +352,7 @@ table.bt td.red{color:var(--rd)}
     <button class="nb" onclick="nav('quotes')" id="n-quotes"><i class="ti ti-chart-bar"></i>My Quotes</button>
     <button class="nb" onclick="nav('carriers')" id="n-carriers"><i class="ti ti-truck-delivery"></i>Carriers</button>
     <button class="nb" id="n-admin" onclick="nav('admin')" style="display:none"><i class="ti ti-shield-check"></i>Admin Dashboard</button>
- 
+
     <div style="flex:1;overflow-y:auto">
       <div class="sl">Federal Limits</div>
       <div class="ref">
@@ -339,7 +376,7 @@ table.bt td.red{color:var(--rd)}
         <div class="ref-r"><span class="rl">Box Truck 26'</span><span class="rv">~11,000</span></div>
       </div>
     </div>
- 
+
     <div style="border-top:0.5px solid var(--bd)">
       <button class="nb" style="width:100%" onclick="doSignOut()"><i class="ti ti-logout"></i>Sign out</button>
       <div class="sb-user">
@@ -351,10 +388,10 @@ table.bt td.red{color:var(--rd)}
       </div>
     </div>
   </div>
- 
+
   <!-- MAIN CONTENT -->
   <div id="main">
- 
+
     <!-- AI CHAT -->
     <div class="view active" id="v-chat">
       <div id="chat-msgs"></div>
@@ -371,10 +408,10 @@ table.bt td.red{color:var(--rd)}
         <button id="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
       </div>
     </div>
- 
+
     <!-- RATE & QUOTE -->
     <div class="view" id="v-rate" style="padding:0;overflow-y:auto">
- 
+
       <!-- Sticky quote header -->
       <div style="position:sticky;top:0;z-index:10;background:var(--am-lt);border-bottom:0.5px solid var(--am-mid);padding:12px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
         <div style="text-align:center">
@@ -393,21 +430,21 @@ table.bt td.red{color:var(--rd)}
           <div style="font-size:11px;color:var(--tx2);margin-top:2px" id="out-margin-pct">—% margin</div>
         </div>
       </div>
- 
+
       <div style="padding:16px 20px">
- 
+
         <div class="ai-result" id="ai-result">
           <div class="ar-head"><i class="ti ti-sparkles"></i>AI Quote Recommendation</div>
           <div class="ar-body" id="ai-result-body"></div>
         </div>
- 
+
         <!-- Load Details with Google Maps + Multi-stop -->
         <div class="section-box" style="border-color:var(--bl)">
           <h3 style="display:flex;align-items:center;justify-content:space-between">
             <span><i class="ti ti-truck"></i>Load Details</span>
             <span style="font-size:11px;color:var(--bl-lt);font-weight:400;display:flex;align-items:center;gap:4px"><i class="ti ti-map" style="color:var(--bl)"></i>Google Maps</span>
           </h3>
- 
+
           <!-- Route builder -->
           <div id="route-builder" style="margin-bottom:10px">
             <!-- Pickup -->
@@ -431,11 +468,11 @@ table.bt td.red{color:var(--rd)}
               </div>
             </div>
           </div>
- 
+
           <button id="add-stop-btn" onclick="addStop()" style="width:100%;padding:7px;background:var(--sf2);border:0.5px dashed var(--bd2);border-radius:7px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:8px">
             <i class="ti ti-plus"></i>Add stop <span id="stop-count-label">(0 of 8)</span>
           </button>
- 
+
           <!-- Miles result -->
           <div id="miles-result-box" style="display:none;padding:8px 12px;background:var(--bl-lt);border:0.5px solid var(--bl);border-radius:8px;margin-bottom:10px;display:none">
             <div style="display:flex;justify-content:space-between;align-items:center">
@@ -449,13 +486,13 @@ table.bt td.red{color:var(--rd)}
               </div>
             </div>
           </div>
- 
+
           <!-- Stop charges total -->
           <div id="stop-charges-row" style="display:none;padding:6px 10px;background:var(--sf2);border:0.5px solid var(--bd);border-radius:6px;margin-bottom:10px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
             <span style="color:var(--tx2)">Stop charges total</span>
             <span style="color:var(--tx);font-weight:600" id="stop-charges-total">$0</span>
           </div>
- 
+
           <div class="form-grid">
             <div class="field">
               <label>Total Miles</label>
@@ -478,7 +515,7 @@ table.bt td.red{color:var(--rd)}
             <div class="field"><label>Deadhead Miles</label><input type="number" id="dh" placeholder="e.g. 45"></div>
           </div>
         </div>
- 
+
         <!-- DAT -->
         <div class="section-box">
           <h3><i class="ti ti-chart-line"></i>DAT RateView</h3>
@@ -500,7 +537,7 @@ table.bt td.red{color:var(--rd)}
             </div>
           </div>
         </div>
- 
+
         <!-- Truckstop (optional) -->
         <div class="section-box" style="border-color:#534AB7">
           <h3 style="display:flex;align-items:center;justify-content:space-between">
@@ -513,7 +550,7 @@ table.bt td.red{color:var(--rd)}
             <div class="field"><label>High Posted $</label><input type="number" id="ts-high" placeholder="e.g. 1350" oninput="calcTsAvg()"></div>
             <div class="field"><label>Avg Posted $</label><input type="number" id="ts-avg" readonly placeholder="auto-calculated"><div style="font-size:9px;color:var(--gn);margin-top:2px"><i class="ti ti-check"></i> auto from low + high</div></div>
           </div>
- 
+
           <!-- Blend controls -->
           <div id="blend-section" style="display:none;border-top:0.5px solid var(--bd);padding-top:12px;margin-top:4px">
             <div style="font-size:11px;font-weight:600;color:var(--tx);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -546,7 +583,7 @@ table.bt td.red{color:var(--rd)}
             </div>
           </div>
         </div>
- 
+
         <!-- Margin -->
         <div class="section-box">
           <h3><i class="ti ti-percentage"></i>Margin & Rate Basis</h3>
@@ -573,7 +610,7 @@ table.bt td.red{color:var(--rd)}
         </div>
       </div>
     </div>
- 
+
     <!-- WEIGHT & PAYLOAD -->
     <div class="view" id="v-weight">
       <div style="padding:18px 20px 0"><h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-weight" style="color:var(--am);margin-right:6px"></i>Weight & Payload Calculator</h1></div>
@@ -625,7 +662,7 @@ table.bt td.red{color:var(--rd)}
         </div>
       </div>
     </div>
- 
+
     <!-- BROKER TOOLS -->
     <div class="view" id="v-docs">
       <div style="padding:18px 20px 0"><h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-tools" style="color:var(--am);margin-right:6px"></i>Broker Tools</h1></div>
@@ -705,7 +742,7 @@ table.bt td.red{color:var(--rd)}
         </div>
       </div>
     </div>
- 
+
     <!-- MY QUOTES -->
     <div class="view" id="v-quotes">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-chart-bar" style="color:var(--am);margin-right:6px"></i>My Quotes</h1>
@@ -719,7 +756,7 @@ table.bt td.red{color:var(--rd)}
         <div class="empty-state"><i class="ti ti-clipboard-list"></i>No quotes yet. Build a quote in Rate & Quote and save it here.</div>
       </div>
     </div>
- 
+
     <!-- ADMIN DASHBOARD -->
     <div class="view" id="v-admin">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-shield-check" style="color:var(--am);margin-right:6px"></i>Admin Dashboard</h1>
@@ -743,33 +780,49 @@ table.bt td.red{color:var(--rd)}
         <button class="invite-btn" onclick="showInviteModal()"><i class="ti ti-plus"></i>Invite team member</button>
       </div>
     </div>
- 
+
     <!-- CARRIERS TAB -->
     <div class="view" id="v-carriers">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-truck-delivery" style="color:var(--am);margin-right:6px"></i>Carriers</h1>
- 
+
       <div class="mc-search-row">
         <input type="text" id="mc-input" placeholder="Enter MC# to look up (e.g. 847291)" onkeydown="if(event.key==='Enter')lookupMC()">
         <button onclick="lookupMC()"><i class="ti ti-search" style="margin-right:5px"></i>Look Up MC</button>
       </div>
- 
+
       <div class="carriers-metrics">
         <div class="dash-metric"><div class="dm-label">Total Carriers</div><div class="dm-val" id="c-total">0</div></div>
         <div class="dash-metric"><div class="dm-label">Approved</div><div class="dm-val green" id="c-approved">0</div></div>
         <div class="dash-metric"><div class="dm-label">Pending Review</div><div class="dm-val blue" id="c-pending">0</div></div>
         <div class="dash-metric"><div class="dm-label">Do Not Use</div><div class="dm-val" style="color:var(--rd)" id="c-dnu">0</div></div>
       </div>
- 
+
       <div id="mc-lookup-result" style="margin-bottom:12px"></div>
- 
+
       <div id="carriers-list">
         <div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>
       </div>
     </div>
- 
+
   </div>
 </div>
- 
+
+<!-- CARRIER PICKER MODAL -->
+<div id="carrier-picker-bg">
+  <div id="carrier-picker">
+    <div id="carrier-picker-header">
+      <h3><i class="ti ti-truck-delivery"></i>Select Carrier</h3>
+      <button onclick="closeCarrierPicker()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:18px;padding:4px"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="carrier-picker-search">
+      <input type="text" id="cp-search" placeholder="Search carriers by name or MC#..." oninput="filterCarrierPicker(this.value)">
+    </div>
+    <div id="carrier-picker-list">
+      <div class="empty-state" style="padding:24px"><i class="ti ti-truck-delivery"></i>No approved carriers yet. Look up carriers in the Carriers tab first.</div>
+    </div>
+  </div>
+</div>
+
 <!-- BROKER QUOTES MODAL -->
 <div id="bq-modal-bg">
   <div id="bq-modal">
@@ -788,7 +841,7 @@ table.bt td.red{color:var(--rd)}
     </div>
   </div>
 </div>
- 
+
 <!-- MODAL -->
 <div id="modal-bg">
   <div id="modal">
@@ -808,23 +861,23 @@ table.bt td.red{color:var(--rd)}
     </div>
   </div>
 </div>
- 
+
 <script>
 // ── SUPABASE ──
 const SUPABASE_URL = 'https://vowcrhflvjsnzlmkofbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PSEql9KDx51VIs9aH0O4fg_9tY5O0nR';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
- 
+
 const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com'];
 const SYSTEM = `You are FreightDesk AI, an expert freight broker assistant for Fide Freight. You help with rates, compliance, HOS rules, carrier vetting, BOL requirements, cargo claims, and all freight brokering operations. Be concise and practical.`;
- 
+
 let currentUser = null;
 let currentProfile = null;
 let msgs = [];
 let busy = false;
 let lastQuoteData = null;
- 
+
 // ── AUTH ──
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -837,31 +890,31 @@ async function doLogin() {
   if (error) { showErr(error.message); btn.textContent = 'Sign in'; btn.disabled = false; return; }
   await loadApp(data.user);
 }
- 
+
 function showErr(msg) {
   const err = document.getElementById('login-err');
   err.textContent = msg; err.style.display = 'block';
 }
- 
+
 async function doForgot() {
   const email = document.getElementById('login-email').value.trim();
   if (!email) { showErr('Enter your email first.'); return; }
   await sb.auth.resetPasswordForEmail(email);
   showErr('Password reset email sent! Check your inbox.');
 }
- 
+
 async function doSignOut() {
   await sb.auth.signOut();
   document.getElementById('app').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   currentUser = null; currentProfile = null; msgs = [];
 }
- 
+
 async function loadApp(user) {
   currentUser = user;
   const isAdmin = ADMIN_EMAILS.includes(user.email);
   currentProfile = { email: user.email, name: user.user_metadata?.full_name || user.email.split('@')[0], role: isAdmin ? 'admin' : 'broker' };
- 
+
   // Save/update profile in profiles table
   await sb.from('profiles').upsert({
     user_id: user.id,
@@ -870,33 +923,33 @@ async function loadApp(user) {
     role: currentProfile.role,
     created_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
- 
+
   // Setup UI
   const initials = currentProfile.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('sb-avatar').textContent = initials;
   document.getElementById('sb-name').textContent = currentProfile.name;
   document.getElementById('sb-role').textContent = isAdmin ? 'Admin' : 'Broker';
   if (isAdmin) document.getElementById('n-admin').style.display = 'flex';
- 
+
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('login-btn').textContent = 'Sign in';
   document.getElementById('login-btn').disabled = false;
- 
+
   addBubble('assistant', `Hey ${currentProfile.name}! FreightDesk AI is ready.\n\nPaste your DAT numbers into Rate & Quote, set your margin, and I'll give you your quote.\n\nOr ask me anything — rates, HOS, carrier vetting, compliance. I've got you.`);
- 
+
   loadMyQuotes();
   loadCarriers();
   if (isAdmin) loadAdminDashboard();
   setupRealtime();
 }
- 
+
 // ── SUPABASE REALTIME ──
 let realtimeChannel = null;
 function setupRealtime() {
   // Clean up any existing subscription
   if (realtimeChannel) sb.removeChannel(realtimeChannel);
- 
+
   realtimeChannel = sb.channel('freightdesk-live')
     .on('postgres_changes', {
       event: '*',
@@ -926,21 +979,21 @@ function setupRealtime() {
       }
     });
 }
- 
+
 // Check existing session on load
 window.addEventListener('load', async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) { await loadApp(session.user); }
- 
+
   // Setup Supabase tables if needed
   await ensureTables();
 });
- 
+
 async function ensureTables() {
   // Create quotes table via RPC or just try inserting — Supabase will handle schema
   // Tables are created via Supabase SQL editor - we'll handle errors gracefully
 }
- 
+
 // ── NAV ──
 function nav(id) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -952,7 +1005,7 @@ function nav(id) {
   if (id === 'quotes') loadMyQuotes();
   if (id === 'admin') loadAdminDashboard();
 }
- 
+
 // ── CHAT ──
 function addBubble(role, text) {
   const d = document.createElement('div');
@@ -990,17 +1043,17 @@ async function callAPI(userText) {
   } catch(e) { hideTyping(); addBubble('assistant','⚠️ Connection error: '+e.message); }
   busy = false;
 }
- 
+
 function apiCall(body) {
   return fetch('/.netlify/functions/claude', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
 }
- 
+
 // ── GOOGLE MAPS AUTOCOMPLETE ──
 let acTimer = null;
 let stopCount = 0;
 const MAX_STOPS = 8;
 let blendDatWeight = 50;
- 
+
 async function handleAutocomplete(field, value) {
   const drop = document.getElementById('ac-' + field);
   if (!value || value.length < 2) { drop.style.display = 'none'; return; }
@@ -1021,13 +1074,13 @@ async function handleAutocomplete(field, value) {
     } catch(e) { drop.style.display = 'none'; }
   }, 300);
 }
- 
+
 function selectCity(field, city, el) {
   document.getElementById('loc-' + field).value = city;
   document.getElementById('ac-' + field).style.display = 'none';
   autoGetMiles();
 }
- 
+
 // ── MULTI-STOP ──
 function addStop() {
   if (stopCount >= MAX_STOPS) return;
@@ -1054,7 +1107,7 @@ function addStop() {
   document.getElementById('stop-charges-row').style.display = 'flex';
   updateStopTotal();
 }
- 
+
 async function handleStopAC(n, value) {
   const drop = document.getElementById('ac-stop-' + n);
   if (!value || value.length < 2) { drop.style.display = 'none'; return; }
@@ -1075,13 +1128,13 @@ async function handleStopAC(n, value) {
     } catch(e) { drop.style.display = 'none'; }
   }, 300);
 }
- 
+
 function selectStopCity(n, city, el) {
   document.getElementById('stop-city-' + n).value = city;
   document.getElementById('ac-stop-' + n).style.display = 'none';
   autoGetMiles();
 }
- 
+
 function removeStop(n) {
   const el = document.getElementById('stop-wrap-' + n);
   if (el) el.remove();
@@ -1091,7 +1144,7 @@ function removeStop(n) {
   updateStopTotal();
   autoGetMiles();
 }
- 
+
 function updateStopTotal() {
   let total = 0;
   for (let i = 1; i <= MAX_STOPS; i++) {
@@ -1101,7 +1154,7 @@ function updateStopTotal() {
   const el = document.getElementById('stop-charges-total');
   if (el) el.textContent = '$' + total.toLocaleString();
 }
- 
+
 // ── AUTO MILES VIA GOOGLE MAPS ──
 let milesTimer = null;
 async function autoGetMiles() {
@@ -1132,7 +1185,7 @@ async function autoGetMiles() {
     } catch(e) { console.log('Miles lookup failed:', e.message); }
   }, 800);
 }
- 
+
 // ── TRUCKSTOP BLEND ──
 function calcTsAvg() {
   const low = parseFloat(document.getElementById('ts-low').value) || 0;
@@ -1147,18 +1200,18 @@ function calcTsAvg() {
     blendSection.style.display = 'none';
   }
 }
- 
+
 function updateBlendSlider(val) {
   blendDatWeight = parseInt(val);
   updateBlendDisplay();
 }
- 
+
 function setBlendPreset(w, btn) {
   blendDatWeight = w;
   document.getElementById('blend-slider').value = w;
   updateBlendDisplay();
 }
- 
+
 function updateBlendDisplay() {
   const tsW = 100 - blendDatWeight;
   document.getElementById('blend-dat-bar').style.width = blendDatWeight + '%';
@@ -1172,7 +1225,7 @@ function updateBlendDisplay() {
   document.getElementById('blend-ts-val').textContent = tsAvg ? '$' + tsAvg.toLocaleString() : '—';
   document.getElementById('blend-result').textContent = blended ? '$' + blended.toLocaleString() : '—';
 }
- 
+
 function getDatAvg() {
   const d30=parseFloat(document.getElementById('d30').value)||0;
   const d60=parseFloat(document.getElementById('d60').value)||0;
@@ -1187,7 +1240,7 @@ function getDatAvg() {
   if(basis==='f13m') return d35f||vals.reduce((a,b)=>a+b,0)/vals.length;
   return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
- 
+
 // ── RATE CALC ──
 function getBasis() {
   const datAvg = getDatAvg();
@@ -1198,7 +1251,7 @@ function getBasis() {
   }
   return datAvg;
 }
- 
+
 function autoCalc() {
   const miles=parseFloat(document.getElementById('miles').value)||0;
   const fsc=parseFloat(document.getElementById('fsc').value)||0;
@@ -1209,14 +1262,14 @@ function autoCalc() {
   const d1y=parseFloat(document.getElementById('d1y').value)||0;
   const d13m=parseFloat(document.getElementById('d13m').value)||0;
   const d35f=parseFloat(document.getElementById('d35f').value)||0;
- 
+
   // Stop charges from multi-stop
   let stopCharges = 0;
   for (let i = 1; i <= MAX_STOPS; i++) {
     const fee = document.getElementById('stop-fee-' + i);
     if (fee) stopCharges += parseFloat(fee.value) || 0;
   }
- 
+
   const vals=[d30,d60,d1y,d13m,d35f].filter(v=>v>0);
   const trendDiv=document.getElementById('trend-display');
   if(vals.length>=2){
@@ -1230,7 +1283,7 @@ function autoCalc() {
     else if(d35f<d30&&vals.length===5){tag.textContent='↓ Softening market';tag.className='tag dn';}
     else{tag.textContent='→ Stable market';tag.className='tag flat';}
   } else { trendDiv.style.display='none'; }
- 
+
   if(!marginPct||isNaN(marginPct)){
     document.getElementById('out-quote').textContent='—';
     document.getElementById('out-carrier').textContent='—';
@@ -1238,28 +1291,28 @@ function autoCalc() {
     document.getElementById('out-margin-pct').textContent='—% margin';
     return;
   }
- 
+
   const datTotal=getBasis(); if(!datTotal) return;
   const equip=document.getElementById('equip').value;
   let equipMultiplier=1.0;
   if(equip.startsWith('Hotshot'))equipMultiplier=0.50;
   else if(equip==='Sprinter Van')equipMultiplier=0.45;
   else if(equip.startsWith('Box Truck'))equipMultiplier=0.55;
- 
+
   const adjustedDatTotal=datTotal*equipMultiplier;
   const fscTotal=fsc*miles;
   const carrierBase=adjustedDatTotal+fscTotal+acc+stopCharges;
   const quoteTotal=carrierBase/(1-marginPct/100);
   const grossMargin=quoteTotal-carrierBase;
   const equipNote=equipMultiplier<1?' ('+Math.round(equipMultiplier*100)+'% rate adj.)':'';
- 
+
   document.getElementById('out-quote').textContent='$'+quoteTotal.toFixed(2);
   document.getElementById('out-quote-pm').textContent=(miles?miles.toLocaleString()+' mi · ':'')+' total load'+equipNote;
   document.getElementById('out-carrier').textContent='$'+carrierBase.toFixed(2);
   document.getElementById('out-carrier-pm').textContent=(miles?miles.toLocaleString()+' mi · ':'')+' total to carrier'+equipNote;
   document.getElementById('out-margin').textContent='$'+grossMargin.toFixed(2);
   document.getElementById('out-margin-pct').textContent=marginPct.toFixed(1)+'% margin';
- 
+
   lastQuoteData={
     lane:(document.getElementById('loc-pu').value||'?')+' → '+(document.getElementById('loc-del').value||'?'),
     equipment:equip, miles:miles, quote_total:parseFloat(quoteTotal.toFixed(2)),
@@ -1268,7 +1321,7 @@ function autoCalc() {
   };
   updateBlendDisplay();
 }
- 
+
 function reopenQuote(id, lane, equipment, miles, marginPct) {
   // Navigate to Rate & Quote tab
   nav('rate');
@@ -1288,7 +1341,7 @@ function reopenQuote(id, lane, equipment, miles, marginPct) {
     }
   }
 }
- 
+
 // ── SAVE QUOTE ──
 async function saveQuote() {
   if (!lastQuoteData) { alert('Calculate a quote first.'); return; }
@@ -1311,7 +1364,7 @@ async function saveQuote() {
   alert('✓ Quote saved to My Quotes!');
   lastQuoteData = null;
 }
- 
+
 // ── MY QUOTES ──
 async function loadMyQuotes() {
   if (!currentUser) return;
@@ -1319,7 +1372,7 @@ async function loadMyQuotes() {
   if (error) { if(error.code!=='42P01') console.error(error); return; }
   renderMyQuotes(data || []);
 }
- 
+
 function renderMyQuotes(quotes) {
   const list = document.getElementById('my-quotes-list');
   const won = quotes.filter(q=>q.status==='won');
@@ -1351,14 +1404,14 @@ function renderMyQuotes(quotes) {
     </div>
   `).join('');
 }
- 
+
 async function setQuoteStatus(id, status) {
   const { error } = await sb.from('quotes').update({ status }).eq('id', id);
   if (error) { alert('Error: '+error.message); return; }
   loadMyQuotes();
   if (currentProfile?.role === 'admin' || ADMIN_EMAILS.includes(currentUser?.email)) loadAdminDashboard();
 }
- 
+
 async function deleteQuote(id, lane) {
   if (!confirm('Delete this quote?\n\n' + lane + '\n\nThis cannot be undone.')) return;
   const { error } = await sb.from('quotes').delete().eq('id', id);
@@ -1366,7 +1419,7 @@ async function deleteQuote(id, lane) {
   loadMyQuotes();
   if (currentProfile?.role === 'admin' || ADMIN_EMAILS.includes(currentUser?.email)) loadAdminDashboard();
 }
- 
+
 async function viewBrokerQuotes(email, name) {
   document.getElementById('bq-modal-title').textContent = name + "'s Quotes";
   document.getElementById('bq-modal-body').innerHTML = '<div class="empty-state"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Loading...</div>';
@@ -1399,10 +1452,10 @@ async function viewBrokerQuotes(email, name) {
     </div>
   `).join('');
 }
- 
+
 function closeBrokerQuotes() { document.getElementById('bq-modal-bg').classList.remove('show'); }
 document.addEventListener('click', e => { if (e.target.id === 'bq-modal-bg') closeBrokerQuotes(); });
- 
+
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -1412,7 +1465,7 @@ function formatDate(iso) {
   if (diff===1) return 'Yesterday';
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
- 
+
 // ── ADMIN DASHBOARD ──
 async function loadAdminDashboard() {
   if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
@@ -1427,7 +1480,7 @@ async function loadAdminDashboard() {
   document.getElementById('adm-revenue').textContent = '$'+won.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
   if(document.getElementById('adm-rev-quoted')) document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
   document.getElementById('adm-margin').textContent = '$'+won.reduce((a,q)=>a+q.gross_margin,0).toLocaleString(undefined,{maximumFractionDigits:0});
- 
+
   // Group by broker
   const brokers = {};
   all.forEach(q => {
@@ -1437,7 +1490,7 @@ async function loadAdminDashboard() {
     if (q.status==='won') brokers[key].won.push(q);
     if (q.status==='lost') brokers[key].lost.push(q);
   });
- 
+
   const tbody = document.getElementById('broker-tbody');
   if (!Object.keys(brokers).length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:20px">No quotes yet</td></tr>'; }
   else {
@@ -1458,13 +1511,13 @@ async function loadAdminDashboard() {
       </tr>`;
     }).join('');
   }
- 
+
   // Load users
   // Load all users from profiles table
   const { data: profiles } = await sb.from('profiles').select('*').order('created_at', { ascending: true });
   const usersList = document.getElementById('users-list');
   const allProfiles = profiles || [];
- 
+
   // Merge with known brokers from quotes
   const knownEmails = new Set([...Object.keys(brokers), ...ADMIN_EMAILS, ...allProfiles.map(p=>p.email)]);
   usersList.innerHTML = [...knownEmails].map(email=>{
@@ -1479,7 +1532,7 @@ async function loadAdminDashboard() {
     </div>`;
   }).join('');
 }
- 
+
 function showInviteModal() { document.getElementById('modal-bg').classList.add('show'); }
 function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
 async function doInvite() {
@@ -1494,7 +1547,7 @@ async function doInvite() {
   }
   closeModal();
 }
- 
+
 // ── AI QUOTE ──
 async function getAIQuote() {
   const d30=document.getElementById('d30').value;
@@ -1519,7 +1572,7 @@ async function getAIQuote() {
     body.textContent = data.content?.find(b=>b.type==='text')?.text||'No response.';
   } catch(e) { body.textContent='Connection error: '+e.message; }
 }
- 
+
 // ── WEIGHT CALC ──
 function wCalc() {
   const tc=parseFloat(document.getElementById('wtr-custom-tractor').value)||parseFloat(document.getElementById('wtr-tractor').value)||0;
@@ -1539,7 +1592,7 @@ function wCalc() {
   if(gvw>80000){warn.style.display='block';document.getElementById('weight-warn-msg').textContent='Over federal 80,000 lb GVW limit by '+Math.abs(avail).toLocaleString()+' lbs — oversize permit required.';}
   else{warn.style.display='none';}
 }
- 
+
 // ── DETENTION ──
 function detCalc() {
   const arr=document.getElementById('det-arr').value;
@@ -1559,7 +1612,7 @@ function detCalc() {
 }
 function timeToMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 function fmtTime(m){const h=Math.floor(m/60),min=m%60;return h+'h '+min+'m';}
- 
+
 // ── TONU ──
 function tonuCalc() {
   const rate=parseFloat(document.getElementById('tonu-rate').value)||0;
@@ -1567,14 +1620,14 @@ function tonuCalc() {
   const dhr=parseFloat(document.getElementById('tonu-dhr').value)||1.5;
   document.getElementById('tonu-total').textContent='$'+(rate+dh*dhr).toFixed(2);
 }
- 
+
 // ── LAYOVER ──
 function layCalc() {
   const rate=parseFloat(document.getElementById('lay-rate').value)||0;
   const days=parseFloat(document.getElementById('lay-days').value)||0;
   document.getElementById('lay-total').textContent='$'+(rate*days).toFixed(2);
 }
- 
+
 // ── EMAIL GENERATOR ──
 async function generateEmail() {
   const type=document.getElementById('email-type').value;
@@ -1589,7 +1642,7 @@ async function generateEmail() {
     body.textContent=data.content?.find(b=>b.type==='text')?.text||'No response.';
   } catch(e){body.textContent='Error: '+e.message;}
 }
- 
+
 // ── DIMS LOOKUP ──
 async function lookupDims() {
   const input=document.getElementById('dims-input').value.trim();
@@ -1624,12 +1677,12 @@ async function lookupDims() {
   }
   btn.innerHTML='<i class="ti ti-ruler-measure"></i>Look Up Dimensions'; btn.disabled=false;
 }
- 
+
 // ── TOOL RESULT STYLES ──
- 
+
 // ── CARRIERS / FMCSA ──
 let carriersDB = {};
- 
+
 async function lookupMC() {
   const mc = document.getElementById('mc-input').value.trim().replace(/[^0-9]/g,'');
   if (!mc) { alert('Enter an MC number.'); return; }
@@ -1673,12 +1726,12 @@ async function lookupMC() {
   }
   btn.innerHTML = '<i class="ti ti-search" style="margin-right:5px"></i>Look Up MC'; btn.disabled = false;
 }
- 
+
 function autoStatus(data) {
   if (data.authorityActive && data.insuranceOnFile && data.safetyRatingOk) return 'cp';
   return 'pending';
 }
- 
+
 async function saveCarriersToDB() {
   if (!currentUser) return;
   const { error } = await sb.from('carriers').upsert(
@@ -1699,7 +1752,7 @@ async function saveCarriersToDB() {
   );
   if (error) console.error('Carrier save error:', error.message);
 }
- 
+
 async function loadCarriers() {
   if (!currentUser) return;
   const { data, error } = await sb.from('carriers').select('*').order('added_at', { ascending: false });
@@ -1721,20 +1774,20 @@ async function loadCarriers() {
   });
   renderCarriers();
 }
- 
+
 function renderCarriers() {
   const carriers = Object.values(carriersDB);
   document.getElementById('c-total').textContent = carriers.length;
   document.getElementById('c-approved').textContent = carriers.filter(c=>c.status==='approved').length;
   document.getElementById('c-pending').textContent = carriers.filter(c=>c.status==='pending'||c.status==='cp').length;
   document.getElementById('c-dnu').textContent = carriers.filter(c=>c.status==='dnu').length;
- 
+
   const list = document.getElementById('carriers-list');
   if (!carriers.length) {
     list.innerHTML = '<div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>';
     return;
   }
- 
+
   const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
   list.innerHTML = carriers.map(c => {
     const statusBadge = {
@@ -1744,17 +1797,17 @@ function renderCarriers() {
       'dnu-suggested': '<span class="c-status-badge csb-dnu-sug">🚩 DNU Suggested</span>',
       dnu: '<span class="c-status-badge csb-dnu">🚫 Do Not Use</span>',
     }[c.status] || '<span class="c-status-badge csb-pending">⏳ Pending Review</span>';
- 
+
     const checks = [
       { pass: c.authorityActive, label: 'Active authority' },
       { pass: c.insuranceOnFile, label: 'Insurance on file' },
       { pass: c.safetyRatingOk,  label: 'Safety rating OK' },
       { pass: c.status !== 'dnu', label: 'Not on DNU list' },
     ];
- 
+
     const flagBox = c.status === 'dnu-suggested' && c.flagReason
       ? `<div class="carrier-flag-box"><i class="ti ti-alert-triangle" style="margin-right:4px"></i>${c.flagReason}</div>` : '';
- 
+
     let actions = '';
     if (c.status === 'cp' || c.status === 'pending') {
       actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
@@ -1767,9 +1820,9 @@ function renderCarriers() {
         actions += `<button class="carrier-action-btn confirm-dnu" onclick="confirmDNU('${c.mc}')">Confirm DNU</button>`;
       }
     }
- 
+
     const location = [c.city, c.state].filter(Boolean).join(', ');
- 
+
     return `<div class="carrier-card">
       <div class="carrier-card-top">
         <div>
@@ -1790,14 +1843,103 @@ function renderCarriers() {
     </div>`;
   }).join('');
 }
- 
+
+// ── LOAD NUMBER SYSTEM ──
+let carrierPickerQuoteId = null;
+
+function formatAppt(dt) {
+  if (!dt) return '';
+  const d = new Date(dt);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+function openCarrierPicker(quoteId) {
+  carrierPickerQuoteId = quoteId;
+  const carriers = Object.values(carriersDB).filter(c => c.status === 'approved' || c.status === 'cp');
+  const list = document.getElementById('carrier-picker-list');
+  document.getElementById('cp-search').value = '';
+  if (!carriers.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:24px"><i class="ti ti-truck-delivery"></i>No approved carriers yet. Go to the Carriers tab and approve a carrier first.</div>';
+  } else {
+    renderCarrierPickerList(carriers);
+  }
+  document.getElementById('carrier-picker-bg').classList.add('show');
+}
+
+function renderCarrierPickerList(carriers) {
+  const list = document.getElementById('carrier-picker-list');
+  list.innerHTML = carriers.map(c => `
+    <div class="cp-item" onclick="selectCarrierForQuote('${c.mc}')">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--am-lt);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--am);flex-shrink:0">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div class="cp-item-info">
+        <div class="cp-item-name">${c.name}</div>
+        <div class="cp-item-mc">MC# ${c.mc}${c.email ? ' · '+c.email : ''}</div>
+      </div>
+      <span style="font-size:10px;padding:2px 7px;border-radius:20px;${c.status==='approved'?'background:var(--gn-lt);color:var(--gn);border:0.5px solid var(--gn)':'background:var(--am-lt);color:var(--am);border:0.5px solid var(--am-mid)'};font-weight:600">${c.status==='approved'?'✓ Approved':'📋 Send CP'}</span>
+    </div>`).join('');
+}
+
+function filterCarrierPicker(val) {
+  const carriers = Object.values(carriersDB).filter(c =>
+    (c.status === 'approved' || c.status === 'cp') &&
+    (c.name.toLowerCase().includes(val.toLowerCase()) || c.mc.includes(val))
+  );
+  renderCarrierPickerList(carriers);
+}
+
+async function selectCarrierForQuote(mc) {
+  if (!carrierPickerQuoteId) return;
+  const { error } = await sb.from('quotes').update({ carrier_mc: mc }).eq('id', carrierPickerQuoteId);
+  if (error) { alert('Error assigning carrier: ' + error.message); return; }
+  closeCarrierPicker();
+  loadMyQuotes();
+}
+
+function closeCarrierPicker() {
+  document.getElementById('carrier-picker-bg').classList.remove('show');
+  carrierPickerQuoteId = null;
+}
+document.addEventListener('click', e => { if (e.target.id === 'carrier-picker-bg') closeCarrierPicker(); });
+
+async function saveLoadDetails(quoteId) {
+  const loadNum = document.getElementById('ln-' + quoteId)?.value?.trim();
+  const shipperRef = document.getElementById('sr-' + quoteId)?.value?.trim();
+  const puAppt = document.getElementById('pu-appt-' + quoteId)?.value;
+  const delAppt = document.getElementById('del-appt-' + quoteId)?.value;
+  if (!loadNum) { alert('Please enter a load number.'); return; }
+  const updates = {
+    load_number: loadNum,
+    shipper_ref: shipperRef || null,
+    pu_appt: puAppt || null,
+    del_appt: delAppt || null,
+  };
+  const { error } = await sb.from('quotes').update(updates).eq('id', quoteId);
+  if (error) { alert('Error saving load details: ' + error.message); return; }
+  loadMyQuotes();
+}
+
+async function editClosedNumbers(quoteId) {
+  const q = (await sb.from('quotes').select('*').eq('id', quoteId).single()).data;
+  if (!q) return;
+  const finalQuote = prompt('Final shipper rate (what you invoiced):', q.final_quote_total || q.quote_total);
+  if (!finalQuote) return;
+  const finalCarrier = prompt('Final carrier pay (what you actually paid):', q.final_carrier_pay || q.carrier_base);
+  if (!finalCarrier) return;
+  const fq = parseFloat(finalQuote);
+  const fc = parseFloat(finalCarrier);
+  if (isNaN(fq) || isNaN(fc)) { alert('Please enter valid numbers.'); return; }
+  const { error } = await sb.from('quotes').update({ final_quote_total: fq, final_carrier_pay: fc }).eq('id', quoteId);
+  if (error) { alert('Error updating: ' + error.message); return; }
+  loadMyQuotes();
+}
+
 async function approveCarrier(mc) {
   if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
   carriersDB[mc].status = 'approved';
   await saveCarriersToDB();
   renderCarriers();
 }
- 
+
 async function flagDNU(mc) {
   const reason = prompt('Reason for flagging as Do Not Use (e.g. double brokered, no show):');
   if (!reason) return;
@@ -1807,7 +1949,7 @@ async function flagDNU(mc) {
   await saveCarriersToDB();
   renderCarriers();
 }
- 
+
 async function dismissDNU(mc) {
   if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
   carriersDB[mc].status = carriersDB[mc].authorityActive && carriersDB[mc].insuranceOnFile ? 'approved' : 'pending';
@@ -1815,7 +1957,7 @@ async function dismissDNU(mc) {
   await saveCarriersToDB();
   renderCarriers();
 }
- 
+
 async function confirmDNU(mc) {
   if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
   if (!confirm('Confirm Do Not Use for ' + carriersDB[mc].name + '? This will block this carrier for your whole team.')) return;
@@ -1823,7 +1965,7 @@ async function confirmDNU(mc) {
   await saveCarriersToDB();
   renderCarriers();
 }
- 
+
 </script>
 <style>
 .tool-result{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
