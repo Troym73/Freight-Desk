@@ -223,6 +223,33 @@ table.bt td.red{color:var(--rd)}
 .bq-stat-val{font-size:16px;font-weight:700;color:var(--tx)}
 #bq-modal-body{overflow-y:auto;padding:16px 24px;flex:1}
 
+/* ── CARRIERS ── */
+.carrier-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:14px 16px;margin-bottom:10px}
+.carrier-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:10px}
+.carrier-name-lg{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.carrier-mc-sm{font-size:11px;color:var(--tx3)}
+.fmcsa-checks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.fmcsa-check{background:var(--sf2);border-radius:6px;padding:5px 8px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)}
+.fmcsa-check.pass{background:var(--gn-lt);color:var(--gn)}
+.fmcsa-check.fail{background:var(--rd-lt);color:var(--rd)}
+.carrier-bottom{display:flex;align-items:center;gap:8px;border-top:0.5px solid var(--bd);padding-top:10px;flex-wrap:wrap}
+.carrier-action-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;font-family:inherit}
+.carrier-action-btn.danger{border-color:var(--rd);color:var(--rd);background:var(--rd-lt)}
+.carrier-action-btn.success{border-color:var(--gn);color:var(--gn);background:var(--gn-lt)}
+.carrier-action-btn.confirm-dnu{border-color:var(--rd);color:var(--rd);background:var(--rd-lt);font-weight:600}
+.carrier-flag-box{background:var(--am-lt);border:0.5px solid var(--am-mid);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--am);margin-bottom:8px}
+.c-status-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.csb-cp{background:var(--am-lt);color:var(--am);border:0.5px solid var(--am-mid)}
+.csb-approved{background:var(--gn-lt);color:var(--gn);border:0.5px solid var(--gn)}
+.csb-pending{background:var(--bl-lt);color:var(--bl);border:0.5px solid var(--bl)}
+.csb-dnu-sug{background:var(--am-lt);color:var(--am);border:0.5px dashed var(--am)}
+.csb-dnu{background:var(--rd-lt);color:var(--rd);border:0.5px solid var(--rd)}
+.mc-search-row{display:flex;gap:8px;margin-bottom:14px}
+.mc-search-row input{flex:1;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--tx);font-family:inherit;outline:none}
+.mc-search-row input:focus{border-color:var(--am)}
+.mc-search-row button{background:var(--am);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.carriers-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
 #modal-bg.show{display:flex}
@@ -286,6 +313,7 @@ table.bt td.red{color:var(--rd)}
     <button class="nb" onclick="nav('weight')" id="n-weight"><i class="ti ti-weight"></i>Weight & Payload</button>
     <button class="nb" onclick="nav('docs')" id="n-docs"><i class="ti ti-tools"></i>Broker Tools</button>
     <button class="nb" onclick="nav('quotes')" id="n-quotes"><i class="ti ti-chart-bar"></i>My Quotes</button>
+    <button class="nb" onclick="nav('carriers')" id="n-carriers"><i class="ti ti-truck-delivery"></i>Carriers</button>
     <button class="nb" id="n-admin" onclick="nav('admin')" style="display:none"><i class="ti ti-shield-check"></i>Admin Dashboard</button>
 
     <div style="flex:1;overflow-y:auto">
@@ -649,7 +677,6 @@ table.bt td.red{color:var(--rd)}
               <option>TONU notice</option>
               <option>Layover notice</option>
               <option>Load tender</option>
-              <option>Carrier load details inquiry response</option>
               <option>Payment inquiry</option>
               <option>Document request</option>
             </select>
@@ -696,13 +723,12 @@ table.bt td.red{color:var(--rd)}
     <!-- ADMIN DASHBOARD -->
     <div class="view" id="v-admin">
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-shield-check" style="color:var(--am);margin-right:6px"></i>Admin Dashboard</h1>
-      <div id="admin-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Quoted</div><div class="dm-val amber" id="adm-rev-quoted">$0</div></div>
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
-        <div class="dash-metric" style="text-align:center"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
+      <div class="admin-metrics" id="admin-metrics">
+        <div class="dash-metric"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
+        <div class="dash-metric"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
+        <div class="dash-metric"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
+        <div class="dash-metric"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
+        <div class="dash-metric"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
       </div>
       <div class="broker-table-wrap">
         <div class="bt-header">Broker Performance — All Time</div>
@@ -715,6 +741,29 @@ table.bt td.red{color:var(--rd)}
         <div class="bt-header">Manage Users</div>
         <div id="users-list"></div>
         <button class="invite-btn" onclick="showInviteModal()"><i class="ti ti-plus"></i>Invite team member</button>
+      </div>
+    </div>
+
+    <!-- CARRIERS TAB -->
+    <div class="view" id="v-carriers">
+      <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-truck-delivery" style="color:var(--am);margin-right:6px"></i>Carriers</h1>
+
+      <div class="mc-search-row">
+        <input type="text" id="mc-input" placeholder="Enter MC# to look up (e.g. 847291)" onkeydown="if(event.key==='Enter')lookupMC()">
+        <button onclick="lookupMC()"><i class="ti ti-search" style="margin-right:5px"></i>Look Up MC</button>
+      </div>
+
+      <div class="carriers-metrics">
+        <div class="dash-metric"><div class="dm-label">Total Carriers</div><div class="dm-val" id="c-total">0</div></div>
+        <div class="dash-metric"><div class="dm-label">Approved</div><div class="dm-val green" id="c-approved">0</div></div>
+        <div class="dash-metric"><div class="dm-label">Pending Review</div><div class="dm-val blue" id="c-pending">0</div></div>
+        <div class="dash-metric"><div class="dm-label">Do Not Use</div><div class="dm-val" style="color:var(--rd)" id="c-dnu">0</div></div>
+      </div>
+
+      <div id="mc-lookup-result" style="margin-bottom:12px"></div>
+
+      <div id="carriers-list">
+        <div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>
       </div>
     </div>
 
@@ -837,6 +886,7 @@ async function loadApp(user) {
   addBubble('assistant', `Hey ${currentProfile.name}! FreightDesk AI is ready.\n\nPaste your DAT numbers into Rate & Quote, set your margin, and I'll give you your quote.\n\nOr ask me anything — rates, HOS, carrier vetting, compliance. I've got you.`);
 
   loadMyQuotes();
+  loadCarriers();
   if (isAdmin) loadAdminDashboard();
 }
 
@@ -1338,7 +1388,7 @@ async function loadAdminDashboard() {
   document.getElementById('adm-won').textContent = won.length;
   document.getElementById('adm-winrate').textContent = all.length > 0 ? winRate+'%' : '—';
   document.getElementById('adm-revenue').textContent = '$'+won.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
-  document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
+  if(document.getElementById('adm-rev-quoted')) document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
   document.getElementById('adm-margin').textContent = '$'+won.reduce((a,q)=>a+q.gross_margin,0).toLocaleString(undefined,{maximumFractionDigits:0});
 
   // Group by broker
@@ -1385,12 +1435,10 @@ async function loadAdminDashboard() {
     const profile = allProfiles.find(p=>p.email===email);
     const name = profile?.name || brokers[email]?.name || email.split('@')[0];
     const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const quoteCount = brokers[email]?.quotes?.length || 0;
     return `<div class="user-row-item">
       <div class="broker-avatar">${initials}</div>
       <div class="uri-info"><div class="uri-name">${name}</div><div class="uri-email">${email}</div></div>
       <span class="role-badge ${isAdmin?'admin':'broker'}">${isAdmin?'Admin':'Broker'}</span>
-      <button class="view-quotes-btn" onclick="viewBrokerQuotes('${email}','${name.replace(/'/g,"\'")}')">${quoteCount?'Quotes ('+quoteCount+')':'Quotes'}</button>
     </div>`;
   }).join('');
 }
@@ -1541,16 +1589,214 @@ async function lookupDims() {
 }
 
 // ── TOOL RESULT STYLES ──
+
+// ── CARRIERS / FMCSA ──
+let carriersDB = {};
+
+async function lookupMC() {
+  const mc = document.getElementById('mc-input').value.trim().replace(/[^0-9]/g,'');
+  if (!mc) { alert('Enter an MC number.'); return; }
+  const btn = document.querySelector('.mc-search-row button');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Looking up...';
+  btn.disabled = true;
+  const result = document.getElementById('mc-lookup-result');
+  result.innerHTML = '';
+  try {
+    const res = await fetch('/.netlify/functions/fmcsa', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mc })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      result.innerHTML = `<div style="padding:12px 16px;background:var(--rd-lt);border:0.5px solid var(--rd);border-radius:var(--r);font-size:13px;color:var(--rd)"><i class="ti ti-alert-circle" style="margin-right:6px"></i>${data.error || 'Lookup failed. Check the MC number and try again.'}</div>`;
+      btn.innerHTML = '<i class="ti ti-search" style="margin-right:5px"></i>Look Up MC'; btn.disabled = false; return;
+    }
+    // Save to carriers DB
+    const existing = carriersDB[mc];
+    const carrier = {
+      mc, dot: data.dot||'—',
+      name: data.name||'Unknown Carrier',
+      city: data.city||'', state: data.state||'',
+      authorityActive: data.authorityActive,
+      insuranceOnFile: data.insuranceOnFile,
+      safetyRatingOk: data.safetyRatingOk,
+      email: data.email||'',
+      phone: data.phone||'',
+      loadsRun: existing?.loadsRun || 0,
+      flagReason: existing?.flagReason || '',
+      status: existing?.status || autoStatus(data),
+      addedAt: existing?.addedAt || new Date().toISOString()
+    };
+    carriersDB[mc] = carrier;
+    await saveCarriersToDB();
+    await loadCarriers();
+    result.innerHTML = `<div style="padding:10px 14px;background:var(--gn-lt);border:0.5px solid var(--gn);border-radius:var(--r);font-size:12px;color:var(--gn)"><i class="ti ti-check" style="margin-right:5px"></i>MC# ${mc} looked up and saved to your carrier database.</div>`;
+  } catch(e) {
+    result.innerHTML = `<div style="padding:12px 16px;background:var(--rd-lt);border:0.5px solid var(--rd);border-radius:var(--r);font-size:13px;color:var(--rd)">Error: ${e.message}</div>`;
+  }
+  btn.innerHTML = '<i class="ti ti-search" style="margin-right:5px"></i>Look Up MC'; btn.disabled = false;
+}
+
+function autoStatus(data) {
+  if (data.authorityActive && data.insuranceOnFile && data.safetyRatingOk) return 'cp';
+  return 'pending';
+}
+
+async function saveCarriersToDB() {
+  if (!currentUser) return;
+  const { error } = await sb.from('carriers').upsert(
+    Object.values(carriersDB).map(c => ({
+      user_id: currentUser.id,
+      mc: c.mc, dot: c.dot, name: c.name,
+      city: c.city, state: c.state,
+      authority_active: c.authorityActive,
+      insurance_on_file: c.insuranceOnFile,
+      safety_rating_ok: c.safetyRatingOk,
+      email: c.email, phone: c.phone,
+      loads_run: c.loadsRun,
+      flag_reason: c.flagReason,
+      status: c.status,
+      added_at: c.addedAt
+    })),
+    { onConflict: 'mc' }
+  );
+  if (error) console.error('Carrier save error:', error.message);
+}
+
+async function loadCarriers() {
+  if (!currentUser) return;
+  const { data, error } = await sb.from('carriers').select('*').order('added_at', { ascending: false });
+  if (error) { if (error.code !== '42P01') console.error(error); return; }
+  carriersDB = {};
+  (data || []).forEach(c => {
+    carriersDB[c.mc] = {
+      mc: c.mc, dot: c.dot, name: c.name,
+      city: c.city, state: c.state,
+      authorityActive: c.authority_active,
+      insuranceOnFile: c.insurance_on_file,
+      safetyRatingOk: c.safety_rating_ok,
+      email: c.email, phone: c.phone,
+      loadsRun: c.loads_run||0,
+      flagReason: c.flag_reason||'',
+      status: c.status||'pending',
+      addedAt: c.added_at
+    };
+  });
+  renderCarriers();
+}
+
+function renderCarriers() {
+  const carriers = Object.values(carriersDB);
+  document.getElementById('c-total').textContent = carriers.length;
+  document.getElementById('c-approved').textContent = carriers.filter(c=>c.status==='approved').length;
+  document.getElementById('c-pending').textContent = carriers.filter(c=>c.status==='pending'||c.status==='cp').length;
+  document.getElementById('c-dnu').textContent = carriers.filter(c=>c.status==='dnu').length;
+
+  const list = document.getElementById('carriers-list');
+  if (!carriers.length) {
+    list.innerHTML = '<div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>';
+    return;
+  }
+
+  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
+  list.innerHTML = carriers.map(c => {
+    const statusBadge = {
+      cp: '<span class="c-status-badge csb-cp">📋 Good to Send CP</span>',
+      approved: '<span class="c-status-badge csb-approved">✓ Approved</span>',
+      pending: '<span class="c-status-badge csb-pending">⏳ Pending Review</span>',
+      'dnu-suggested': '<span class="c-status-badge csb-dnu-sug">🚩 DNU Suggested</span>',
+      dnu: '<span class="c-status-badge csb-dnu">🚫 Do Not Use</span>',
+    }[c.status] || '<span class="c-status-badge csb-pending">⏳ Pending Review</span>';
+
+    const checks = [
+      { pass: c.authorityActive, label: 'Active authority' },
+      { pass: c.insuranceOnFile, label: 'Insurance on file' },
+      { pass: c.safetyRatingOk,  label: 'Safety rating OK' },
+      { pass: c.status !== 'dnu', label: 'Not on DNU list' },
+    ];
+
+    const flagBox = c.status === 'dnu-suggested' && c.flagReason
+      ? `<div class="carrier-flag-box"><i class="ti ti-alert-triangle" style="margin-right:4px"></i>${c.flagReason}</div>` : '';
+
+    let actions = '';
+    if (c.status === 'cp' || c.status === 'pending') {
+      actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
+      if (isAdmin) actions += `<button class="carrier-action-btn success" onclick="approveCarrier('${c.mc}')">Mark Approved</button>`;
+    } else if (c.status === 'approved') {
+      actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
+    } else if (c.status === 'dnu-suggested') {
+      if (isAdmin) {
+        actions += `<button class="carrier-action-btn success" onclick="dismissDNU('${c.mc}')">Dismiss Flag</button>`;
+        actions += `<button class="carrier-action-btn confirm-dnu" onclick="confirmDNU('${c.mc}')">Confirm DNU</button>`;
+      }
+    }
+
+    const location = [c.city, c.state].filter(Boolean).join(', ');
+
+    return `<div class="carrier-card">
+      <div class="carrier-card-top">
+        <div>
+          <div class="carrier-name-lg">${c.name}</div>
+          <div class="carrier-mc-sm">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}${location ? ' · '+location : ''}</div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div class="fmcsa-checks">
+        ${checks.map(ch => `<div class="fmcsa-check ${ch.pass?'pass':'fail'}"><i class="ti ti-${ch.pass?'check':'x'}" style="font-size:12px"></i>${ch.label}</div>`).join('')}
+      </div>
+      ${flagBox}
+      <div class="carrier-bottom">
+        <span style="font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px"><i class="ti ti-package" style="font-size:12px"></i>${c.loadsRun} load${c.loadsRun!==1?'s':''} run</span>
+        ${c.email ? `<span style="font-size:11px;color:var(--tx2)">${c.email}</span>` : ''}
+        <div style="margin-left:auto;display:flex;gap:6px">${actions}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function approveCarrier(mc) {
+  if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
+  carriersDB[mc].status = 'approved';
+  await saveCarriersToDB();
+  renderCarriers();
+}
+
+async function flagDNU(mc) {
+  const reason = prompt('Reason for flagging as Do Not Use (e.g. double brokered, no show):');
+  if (!reason) return;
+  const brokerName = currentProfile?.name || currentUser?.email;
+  carriersDB[mc].status = 'dnu-suggested';
+  carriersDB[mc].flagReason = `Flagged by ${brokerName} · "${reason}"`;
+  await saveCarriersToDB();
+  renderCarriers();
+}
+
+async function dismissDNU(mc) {
+  if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
+  carriersDB[mc].status = carriersDB[mc].authorityActive && carriersDB[mc].insuranceOnFile ? 'approved' : 'pending';
+  carriersDB[mc].flagReason = '';
+  await saveCarriersToDB();
+  renderCarriers();
+}
+
+async function confirmDNU(mc) {
+  if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
+  if (!confirm('Confirm Do Not Use for ' + carriersDB[mc].name + '? This will block this carrier for your whole team.')) return;
+  carriersDB[mc].status = 'dnu';
+  await saveCarriersToDB();
+  renderCarriers();
+}
+
 </script>
 <style>
 .tool-result{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
 .tr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid var(--bd);font-size:13px}
 .tr-row:last-child{border:none}
-.tr-row.highlight{background:var(--am-mid)}
+.tr-row.highlight{background:var(--am-lt)}
 .tr-row .tr-label{color:var(--tx)}
 .tr-row .tr-val{font-weight:600;color:var(--tx)}
-.tr-row.highlight .tr-val{color:#fff}
-.tr-row.highlight .tr-label{color:#fff}
+.tr-row.highlight .tr-val{color:var(--am-dp)}
+.tr-row.highlight .tr-label{color:var(--am-dk)}
 </style>
 </body>
 </html>
