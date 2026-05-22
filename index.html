@@ -234,6 +234,17 @@ table.bt td.red{color:var(--rd)}
 .fmcsa-check.pass{background:var(--gn-lt);color:var(--gn)}
 .fmcsa-check.fail{background:var(--rd-lt);color:var(--rd)}
 .carrier-bottom{display:flex;align-items:center;gap:8px;border-top:0.5px solid var(--bd);padding-top:10px;flex-wrap:wrap}
+.carrier-detail-section{border-top:0.5px solid var(--bd);padding-top:10px;margin-top:2px}
+.carrier-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.cd-label{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.cd-input{width:100%;background:var(--sf2);border:0.5px solid var(--bd2);border-radius:6px;padding:6px 9px;font-size:12px;color:var(--tx);font-family:inherit;outline:none}
+.cd-input:focus{border-color:var(--am)}
+.equip-checks{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.equip-chip{font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;user-select:none}
+.equip-chip.selected{background:var(--am-lt);color:var(--am);border-color:var(--am-mid)}
+.carrier-detail-toggle{font-size:11px;color:var(--tx3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 0;border:none;background:none;font-family:inherit}
+.carrier-detail-toggle:hover{color:var(--tx)}
+.save-carrier-details-btn{font-size:11px;padding:5px 12px;border-radius:6px;background:var(--am);color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:500}
 .carrier-action-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;font-family:inherit}
 .carrier-action-btn.danger{border-color:var(--rd);color:var(--rd);background:var(--rd-lt)}
 .carrier-action-btn.success{border-color:var(--gn);color:var(--gn);background:var(--gn-lt)}
@@ -787,7 +798,7 @@ table.bt td.red{color:var(--rd)}
       <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-truck-delivery" style="color:var(--am);margin-right:6px"></i>Carriers</h1>
 
       <div class="mc-search-row">
-        <input type="text" id="mc-input" placeholder="Enter MC# to look up (e.g. 847291)" onkeydown="if(event.key==='Enter')lookupMC()">
+        <input type="text" id="mc-input" placeholder="Enter MC# to look up or search existing (e.g. 847291)" onkeydown="if(event.key==='Enter')lookupMC()" oninput="searchExistingCarriers(this.value)">
         <button onclick="lookupMC()"><i class="ti ti-search" style="margin-right:5px"></i>Look Up MC</button>
       </div>
 
@@ -1795,14 +1806,89 @@ async function lookupDims() {
 // ── CARRIERS / FMCSA ──
 let carriersDB = {};
 
+function searchExistingCarriers(val) {
+  const clean = val.trim().replace(/[^0-9a-zA-Z\s]/g,'').toLowerCase();
+  if (!clean || clean.length < 2) {
+    // Reset to full list if input cleared
+    if (!clean) renderCarriers();
+    return;
+  }
+  const matches = Object.values(carriersDB).filter(c =>
+    c.mc.includes(clean) ||
+    c.name.toLowerCase().includes(clean) ||
+    (c.dot && c.dot.includes(clean))
+  );
+  if (matches.length === 0) return; // Don't filter if no match — might be new MC
+  // Temporarily render filtered list
+  const list = document.getElementById('carriers-list');
+  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
+  if (matches.length < Object.values(carriersDB).length) {
+    // Only filter if we have fewer results
+    const statusBadgeMap = {
+      cp: '<span class="c-status-badge csb-cp">📋 Good to Send CP</span>',
+      approved: '<span class="c-status-badge csb-approved">✓ Approved</span>',
+      pending: '<span class="c-status-badge csb-pending">⏳ Pending Review</span>',
+      'dnu-suggested': '<span class="c-status-badge csb-dnu-sug">🚩 DNU Suggested</span>',
+      dnu: '<span class="c-status-badge csb-dnu">🚫 Do Not Use</span>',
+    };
+    list.innerHTML = matches.map(c => {
+      const checks = [
+        { pass: c.authorityActive, label: 'Active authority' },
+        { pass: c.insuranceOnFile, label: 'Insurance on file' },
+        { pass: c.safetyRatingOk, label: 'Safety rating OK' },
+        { pass: c.status !== 'dnu', label: 'Not on DNU list' },
+      ];
+      const flagBox = c.status === 'dnu-suggested' && c.flagReason
+        ? `<div class="carrier-flag-box"><i class="ti ti-alert-triangle" style="margin-right:4px"></i>${c.flagReason}</div>` : '';
+      let actions = '';
+      if (c.status === 'cp' || c.status === 'pending') {
+        actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
+        if (isAdmin) actions += `<button class="carrier-action-btn success" onclick="approveCarrier('${c.mc}')">Mark Approved</button>`;
+      } else if (c.status === 'approved') {
+        actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
+      } else if (c.status === 'dnu-suggested' && isAdmin) {
+        actions += `<button class="carrier-action-btn success" onclick="dismissDNU('${c.mc}')">Dismiss</button>`;
+        actions += `<button class="carrier-action-btn confirm-dnu" onclick="confirmDNU('${c.mc}')">Confirm DNU</button>`;
+      }
+      const location = [c.city, c.state].filter(Boolean).join(', ');
+      return `<div class="carrier-card" data-mc="${c.mc}">
+        <div class="carrier-card-top">
+          <div><div class="carrier-name-lg">${c.name}</div><div class="carrier-mc-sm">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}${location ? ' · '+location : ''}</div></div>
+          ${statusBadgeMap[c.status] || statusBadgeMap.pending}
+        </div>
+        <div class="fmcsa-checks">${checks.map(ch => `<div class="fmcsa-check ${ch.pass?'pass':'fail'}"><i class="ti ti-${ch.pass?'check':'x'}" style="font-size:12px"></i>${ch.label}</div>`).join('')}</div>
+        ${flagBox}
+        <div class="carrier-bottom">
+          <span style="font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px"><i class="ti ti-package" style="font-size:12px"></i>${c.loadsRun} load${c.loadsRun!==1?'s':''} run</span>
+          ${c.email ? `<span style="font-size:11px;color:var(--tx2)">${c.email}</span>` : ''}
+          <div style="margin-left:auto;display:flex;gap:6px">${actions}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
 async function lookupMC() {
   const mc = document.getElementById('mc-input').value.trim().replace(/[^0-9]/g,'');
   if (!mc) { alert('Enter an MC number.'); return; }
   const btn = document.querySelector('.mc-search-row button');
-  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Looking up...';
-  btn.disabled = true;
   const result = document.getElementById('mc-lookup-result');
   result.innerHTML = '';
+
+  // Check if already in local database first
+  if (carriersDB[mc]) {
+    renderCarriers();
+    result.innerHTML = `<div style="padding:10px 14px;background:var(--bl-lt);border:0.5px solid var(--bl);border-radius:var(--r);font-size:12px;color:#93c5fd"><i class="ti ti-info-circle" style="margin-right:5px"></i>MC# ${mc} is already in your carrier database. Showing existing record below.</div>`;
+    // Scroll to the carrier card
+    setTimeout(() => {
+      const card = document.querySelector(`[data-mc="${mc}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    return;
+  }
+
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Looking up...';
+  btn.disabled = true;
   try {
     const res = await fetch('/.netlify/functions/fmcsa', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1871,6 +1957,8 @@ async function loadCarriers() {
   if (error) { if (error.code !== '42P01') console.error(error); return; }
   carriersDB = {};
   (data || []).forEach(c => {
+    let equipment = [];
+    try { equipment = c.equipment ? JSON.parse(c.equipment) : []; } catch(e) { equipment = []; }
     carriersDB[c.mc] = {
       mc: c.mc, dot: c.dot, name: c.name,
       city: c.city, state: c.state,
@@ -1881,7 +1969,11 @@ async function loadCarriers() {
       loadsRun: c.loads_run||0,
       flagReason: c.flag_reason||'',
       status: c.status||'pending',
-      addedAt: c.added_at
+      addedAt: c.added_at,
+      dispatcher: c.dispatcher||'',
+      homeBase: c.home_base||'',
+      lanes: c.lanes||'',
+      equipment,
     };
   });
   renderCarriers();
@@ -1935,7 +2027,7 @@ function renderCarriers() {
 
     const location = [c.city, c.state].filter(Boolean).join(', ');
 
-    return `<div class="carrier-card">
+    return `<div class="carrier-card" data-mc="${c.mc}">
       <div class="carrier-card-top">
         <div>
           <div class="carrier-name-lg">${c.name}</div>
@@ -1949,8 +2041,48 @@ function renderCarriers() {
       ${flagBox}
       <div class="carrier-bottom">
         <span style="font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px"><i class="ti ti-package" style="font-size:12px"></i>${c.loadsRun} load${c.loadsRun!==1?'s':''} run</span>
-        ${c.email ? `<span style="font-size:11px;color:var(--tx2)">${c.email}</span>` : ''}
+        ${c.phone ? `<span style="font-size:11px;color:var(--tx2)"><i class="ti ti-phone" style="font-size:11px;margin-right:3px"></i>${c.phone}</span>` : ''}
+        ${c.email ? `<span style="font-size:11px;color:var(--tx2)"><i class="ti ti-mail" style="font-size:11px;margin-right:3px"></i>${c.email}</span>` : ''}
         <div style="margin-left:auto;display:flex;gap:6px">${actions}</div>
+      </div>
+      ${c.equipment && c.equipment.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 0 2px"><i class="ti ti-truck" style="font-size:12px;color:var(--tx3);margin-right:2px"></i>${c.equipment.map(e=>`<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--sf2);border:0.5px solid var(--bd2);color:var(--tx2)">${e}</span>`).join('')}</div>` : ''}
+      ${c.lanes ? `<div style="font-size:11px;color:var(--tx2);padding:4px 0;display:flex;align-items:flex-start;gap:5px"><i class="ti ti-route" style="font-size:12px;color:var(--tx3);flex-shrink:0;margin-top:1px"></i><span>${c.lanes}</span></div>` : ''}
+      ${c.dispatcher ? `<div style="font-size:11px;color:var(--tx2);padding:2px 0;display:flex;align-items:center;gap:5px"><i class="ti ti-user" style="font-size:12px;color:var(--tx3)"></i><span>Dispatcher: ${c.dispatcher}</span></div>` : ''}
+      <button class="carrier-detail-toggle" onclick="toggleCarrierDetails('${c.mc}')">
+        <i class="ti ti-chevron-down" style="font-size:12px"></i>Edit carrier details
+      </button>
+      <div id="cd-${c.mc}" style="display:none">
+        <div class="carrier-detail-section">
+          <div class="carrier-detail-grid">
+            <div>
+              <div class="cd-label">Dispatcher Name</div>
+              <input class="cd-input" type="text" id="cd-disp-${c.mc}" placeholder="e.g. John Smith" value="${c.dispatcher||''}">
+            </div>
+            <div>
+              <div class="cd-label">Dispatcher Phone</div>
+              <input class="cd-input" type="text" id="cd-phone-${c.mc}" placeholder="e.g. (555) 867-5309" value="${c.phone||''}">
+            </div>
+            <div>
+              <div class="cd-label">Dispatcher Email</div>
+              <input class="cd-input" type="text" id="cd-email-${c.mc}" placeholder="e.g. dispatch@carrier.com" value="${c.email||''}">
+            </div>
+            <div>
+              <div class="cd-label">Home Base / Region</div>
+              <input class="cd-input" type="text" id="cd-home-${c.mc}" placeholder="e.g. Chicago, IL" value="${c.homeBase||''}">
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <div class="cd-label">Preferred Lanes</div>
+            <input class="cd-input" type="text" id="cd-lanes-${c.mc}" placeholder="e.g. Midwest to Southeast, IL/IN/OH/KY/TN" value="${c.lanes||''}">
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="cd-label" style="margin-bottom:5px">Equipment Types</div>
+            <div class="equip-checks" id="cd-equip-${c.mc}">
+              ${buildEquipChips(c.mc, c.equipment||[])}
+            </div>
+          </div>
+          <button class="save-carrier-details-btn" onclick="saveCarrierDetails('${c.mc}')"><i class="ti ti-device-floppy" style="margin-right:4px"></i>Save Details</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2052,6 +2184,53 @@ async function editClosedNumbers(quoteId) {
   const { error } = await sb.from('quotes').update({ final_quote_total: fq, final_carrier_pay: fc }).eq('id', quoteId);
   if (error) { alert('Error updating: ' + error.message); return; }
   loadMyQuotes();
+}
+
+const EQUIP_TYPES = ['Dry Van','Reefer','Flatbed','Step Deck','RGN','Hotshot','Sprinter Van','Box Truck','Power Only','Conestoga'];
+
+function buildEquipChips(mc, selected) {
+  return EQUIP_TYPES.map(eq => {
+    const sel = selected.includes(eq);
+    return '<span class="equip-chip' + (sel ? ' selected' : '') + '" onclick="toggleEquipChip(this)">' + eq + '</span>';
+  }).join('');
+}
+
+function toggleCarrierDetails(mc) {
+  const el = document.getElementById('cd-' + mc);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+}
+
+function toggleEquipChip(el) {
+  el.classList.toggle('selected');
+}
+
+async function saveCarrierDetails(mc) {
+  const dispatcher = document.getElementById('cd-disp-' + mc)?.value?.trim() || '';
+  const phone = document.getElementById('cd-phone-' + mc)?.value?.trim() || '';
+  const email = document.getElementById('cd-email-' + mc)?.value?.trim() || '';
+  const homeBase = document.getElementById('cd-home-' + mc)?.value?.trim() || '';
+  const lanes = document.getElementById('cd-lanes-' + mc)?.value?.trim() || '';
+  const equipChips = document.querySelectorAll(`#cd-equip-${mc} .equip-chip.selected`);
+  const equipment = Array.from(equipChips).map(el => el.textContent);
+
+  carriersDB[mc].dispatcher = dispatcher;
+  carriersDB[mc].phone = phone;
+  carriersDB[mc].email = email;
+  carriersDB[mc].homeBase = homeBase;
+  carriersDB[mc].lanes = lanes;
+  carriersDB[mc].equipment = equipment;
+
+  const { error } = await sb.from('carriers').update({
+    dispatcher, phone, email,
+    home_base: homeBase,
+    lanes,
+    equipment: JSON.stringify(equipment)
+  }).eq('mc', mc);
+
+  if (error) { alert('Error saving: ' + error.message); return; }
+  renderCarriers();
 }
 
 async function approveCarrier(mc) {
