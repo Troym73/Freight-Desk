@@ -1807,66 +1807,22 @@ async function lookupDims() {
 let carriersDB = {};
 
 function searchExistingCarriers(val) {
-  const clean = val.trim().replace(/[^0-9a-zA-Z\s]/g,'').toLowerCase();
+  const clean = val.trim().toLowerCase();
   if (!clean || clean.length < 2) {
-    // Reset to full list if input cleared
     if (!clean) renderCarriers();
     return;
   }
-  const matches = Object.values(carriersDB).filter(c =>
+  const all = Object.values(carriersDB);
+  const matches = all.filter(c =>
     c.mc.includes(clean) ||
     c.name.toLowerCase().includes(clean) ||
-    (c.dot && c.dot.includes(clean))
+    (c.dot && c.dot.toLowerCase().includes(clean))
   );
-  if (matches.length === 0) return; // Don't filter if no match — might be new MC
-  // Temporarily render filtered list
-  const list = document.getElementById('carriers-list');
+  if (!matches.length || matches.length === all.length) return;
   const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
-  if (matches.length < Object.values(carriersDB).length) {
-    // Only filter if we have fewer results
-    const statusBadgeMap = {
-      cp: '<span class="c-status-badge csb-cp">📋 Good to Send CP</span>',
-      approved: '<span class="c-status-badge csb-approved">✓ Approved</span>',
-      pending: '<span class="c-status-badge csb-pending">⏳ Pending Review</span>',
-      'dnu-suggested': '<span class="c-status-badge csb-dnu-sug">🚩 DNU Suggested</span>',
-      dnu: '<span class="c-status-badge csb-dnu">🚫 Do Not Use</span>',
-    };
-    list.innerHTML = matches.map(c => {
-      const checks = [
-        { pass: c.authorityActive, label: 'Active authority' },
-        { pass: c.insuranceOnFile, label: 'Insurance on file' },
-        { pass: c.safetyRatingOk, label: 'Safety rating OK' },
-        { pass: c.status !== 'dnu', label: 'Not on DNU list' },
-      ];
-      const flagBox = c.status === 'dnu-suggested' && c.flagReason
-        ? `<div class="carrier-flag-box"><i class="ti ti-alert-triangle" style="margin-right:4px"></i>${c.flagReason}</div>` : '';
-      let actions = '';
-      if (c.status === 'cp' || c.status === 'pending') {
-        actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
-        if (isAdmin) actions += `<button class="carrier-action-btn success" onclick="approveCarrier('${c.mc}')">Mark Approved</button>`;
-      } else if (c.status === 'approved') {
-        actions += `<button class="carrier-action-btn danger" onclick="flagDNU('${c.mc}')">Flag DNU</button>`;
-      } else if (c.status === 'dnu-suggested' && isAdmin) {
-        actions += `<button class="carrier-action-btn success" onclick="dismissDNU('${c.mc}')">Dismiss</button>`;
-        actions += `<button class="carrier-action-btn confirm-dnu" onclick="confirmDNU('${c.mc}')">Confirm DNU</button>`;
-      }
-      const location = [c.city, c.state].filter(Boolean).join(', ');
-      return `<div class="carrier-card" data-mc="${c.mc}">
-        <div class="carrier-card-top">
-          <div><div class="carrier-name-lg">${c.name}</div><div class="carrier-mc-sm">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}${location ? ' · '+location : ''}</div></div>
-          ${statusBadgeMap[c.status] || statusBadgeMap.pending}
-        </div>
-        <div class="fmcsa-checks">${checks.map(ch => `<div class="fmcsa-check ${ch.pass?'pass':'fail'}"><i class="ti ti-${ch.pass?'check':'x'}" style="font-size:12px"></i>${ch.label}</div>`).join('')}</div>
-        ${flagBox}
-        <div class="carrier-bottom">
-          <span style="font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px"><i class="ti ti-package" style="font-size:12px"></i>${c.loadsRun} load${c.loadsRun!==1?'s':''} run</span>
-          ${c.email ? `<span style="font-size:11px;color:var(--tx2)">${c.email}</span>` : ''}
-          <div style="margin-left:auto;display:flex;gap:6px">${actions}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  document.getElementById('carriers-list').innerHTML = matches.map(c => buildCarrierCard(c, isAdmin)).join('');
 }
+
 
 async function lookupMC() {
   const mc = document.getElementById('mc-input').value.trim().replace(/[^0-9]/g,'');
@@ -1979,21 +1935,7 @@ async function loadCarriers() {
   renderCarriers();
 }
 
-function renderCarriers() {
-  const carriers = Object.values(carriersDB);
-  document.getElementById('c-total').textContent = carriers.length;
-  document.getElementById('c-approved').textContent = carriers.filter(c=>c.status==='approved').length;
-  document.getElementById('c-pending').textContent = carriers.filter(c=>c.status==='pending'||c.status==='cp').length;
-  document.getElementById('c-dnu').textContent = carriers.filter(c=>c.status==='dnu').length;
-
-  const list = document.getElementById('carriers-list');
-  if (!carriers.length) {
-    list.innerHTML = '<div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>';
-    return;
-  }
-
-  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
-  list.innerHTML = carriers.map(c => {
+function buildCarrierCard(c, isAdmin) {
     const statusBadge = {
       cp: '<span class="c-status-badge csb-cp">📋 Good to Send CP</span>',
       approved: '<span class="c-status-badge csb-approved">✓ Approved</span>',
@@ -2085,7 +2027,23 @@ function renderCarriers() {
         </div>
       </div>
     </div>`;
-  }).join('');
+}
+
+function renderCarriers() {
+  const carriers = Object.values(carriersDB);
+  document.getElementById('c-total').textContent = carriers.length;
+  document.getElementById('c-approved').textContent = carriers.filter(c=>c.status==='approved').length;
+  document.getElementById('c-pending').textContent = carriers.filter(c=>c.status==='pending'||c.status==='cp').length;
+  document.getElementById('c-dnu').textContent = carriers.filter(c=>c.status==='dnu').length;
+
+  const list = document.getElementById('carriers-list');
+  if (!carriers.length) {
+    list.innerHTML = '<div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>';
+    return;
+  }
+
+  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
+  list.innerHTML = carriers.map(c => buildCarrierCard(c, isAdmin)).join('');
 }
 
 // ── LOAD NUMBER SYSTEM ──
