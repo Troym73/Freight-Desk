@@ -60,7 +60,7 @@ async function generateLeads() {
 
     // Step 2: AI scoring and opener generation
     const placesList = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
-    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","opener":"Your opener here"},...]';
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","reason":"Large manufacturer with daily outbound volume and clear flatbed freight need","opener":"Your opener here"},...]';
 
     const aiRes = await fetch('/.netlify/functions/claude', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -78,7 +78,7 @@ async function generateLeads() {
       const rawTier = (s.tier || '').toLowerCase().trim();
       const score = parseInt(s.score) || 60;
       const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
-      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, reason: s.reason || '', opener: s.opener || '' };
     }).sort((a, b) => b.score - a.score);
 
     // Update metrics
@@ -145,6 +145,7 @@ function renderLeads(leads) {
         ${l.equipment?.length ? `<div class="lead-detail"><i class="ti ti-truck"></i>${l.equipment.join(', ')}</div>` : ''}
         ${l.commodity ? `<div class="lead-detail"><i class="ti ti-package"></i>${l.commodity}</div>` : ''}
       </div>
+      ${l.reason ? `<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--tx2);margin-bottom:8px;padding:5px 9px;background:var(--sf2);border-radius:6px;border:0.5px solid var(--bd)"><i class="ti ti-chart-bar" style="font-size:12px;color:var(--am);flex-shrink:0;margin-top:1px"></i><span><strong style="color:var(--tx);font-weight:500">Why this score:</strong> ${l.reason}</span></div>` : ''}
       ${l.opener ? `<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>${l.opener}</div>` : ''}
       <div class="lead-actions">
         <button class="lead-btn primary" onclick="draftLeadEmail(${i})"><i class="ti ti-mail"></i>Draft email</button>
@@ -2562,7 +2563,7 @@ async function generateLeads() {
 
     // Step 2: AI scoring and opener generation
     const placesList2 = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
-    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList2+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","opener":"Your opener here"},...]';
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList2+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","reason":"Large manufacturer with daily outbound volume and clear flatbed freight need","opener":"Your opener here"},...]';
 
     const aiRes = await fetch('/.netlify/functions/claude', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2580,7 +2581,7 @@ async function generateLeads() {
       const rawTier = (s.tier || '').toLowerCase().trim();
       const score = parseInt(s.score) || 60;
       const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
-      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, reason: s.reason || '', opener: s.opener || '' };
     }).sort((a, b) => b.score - a.score);
 
     // Update metrics
@@ -2647,6 +2648,7 @@ function renderLeads(leads) {
         ${l.equipment?.length ? `<div class="lead-detail"><i class="ti ti-truck"></i>${l.equipment.join(', ')}</div>` : ''}
         ${l.commodity ? `<div class="lead-detail"><i class="ti ti-package"></i>${l.commodity}</div>` : ''}
       </div>
+      ${l.reason ? `<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--tx2);margin-bottom:8px;padding:5px 9px;background:var(--sf2);border-radius:6px;border:0.5px solid var(--bd)"><i class="ti ti-chart-bar" style="font-size:12px;color:var(--am);flex-shrink:0;margin-top:1px"></i><span><strong style="color:var(--tx);font-weight:500">Why this score:</strong> ${l.reason}</span></div>` : ''}
       ${l.opener ? `<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>${l.opener}</div>` : ''}
       <div class="lead-actions">
         <button class="lead-btn primary" onclick="draftLeadEmail(${i})"><i class="ti ti-mail"></i>Draft email</button>
