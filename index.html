@@ -11,8 +11,21 @@
 let allLeads = [];
 let currentLeadFilter = 'all';
 
+function toggleCustomCommodity(val) {
+  const customInput = document.getElementById('lead-commodity-custom');
+  if (val === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
+}
+
 async function generateLeads() {
-  const commodity = document.getElementById('lead-commodity').value;
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
   const city = document.getElementById('lead-city').value.trim();
   const radius = document.getElementById('lead-radius').value;
   if (!city) { alert('Please enter a city or region.'); return; }
@@ -146,7 +159,10 @@ function copyOpener(i) {
 async function draftLeadEmail(i) {
   const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
   if (!lead) return;
-  const commodity = document.getElementById('lead-commodity').value;
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
   const prompt = `Write a short, professional cold outreach email for a freight broker at Fide Freight to send to ${lead.name}, a ${commodity} shipper. The email should introduce Fide Freight, mention our expertise in ${lead.equipment?.join(' and ') || commodity} freight, and ask for a 10-minute call. Keep it under 150 words. Include a subject line.`;
   nav('docs');
   document.getElementById('email-type').value = 'Load tender';
@@ -991,7 +1007,7 @@ table.bt td.red{color:var(--rd)}
         <div class="leads-form-grid">
           <div class="field">
             <label>Commodity / Industry</label>
-            <select id="lead-commodity">
+            <select id="lead-commodity" onchange="toggleCustomCommodity(this.value)">
               <option value="Auto Parts & Manufacturing">Auto Parts & Manufacturing</option>
               <option value="Food & Beverage">Food & Beverage</option>
               <option value="Steel & Metal Products">Steel & Metal Products</option>
@@ -1003,7 +1019,13 @@ table.bt td.red{color:var(--rd)}
               <option value="Electronics & Tech">Electronics & Tech</option>
               <option value="Automotive Assembly">Automotive Assembly</option>
               <option value="Construction Materials">Construction Materials</option>
+              <option value="Plastics & Rubber">Plastics & Rubber</option>
+              <option value="Medical & Pharmaceutical">Medical & Pharmaceutical</option>
+              <option value="Furniture & Home Goods">Furniture & Home Goods</option>
+              <option value="Textiles & Apparel">Textiles & Apparel</option>
+              <option value="custom">Custom...</option>
             </select>
+            <input type="text" id="lead-commodity-custom" placeholder="e.g. Aerospace components" style="display:none;margin-top:6px;width:100%;background:var(--sf2);border:0.5px solid var(--am-mid);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--tx);font-family:inherit;outline:none">
           </div>
           <div class="field">
             <label>City / Region</label>
@@ -2486,8 +2508,21 @@ async function confirmDNU(mc) {
 let allLeads = [];
 let currentLeadFilter = 'all';
 
+function toggleCustomCommodity(val) {
+  const customInput = document.getElementById('lead-commodity-custom');
+  if (val === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
+}
+
 async function generateLeads() {
-  const commodity = document.getElementById('lead-commodity').value;
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
   const city = document.getElementById('lead-city').value.trim();
   const radius = document.getElementById('lead-radius').value;
   if (!city) { alert('Please enter a city or region.'); return; }
@@ -2621,7 +2656,10 @@ function copyOpener(i) {
 async function draftLeadEmail(i) {
   const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
   if (!lead) return;
-  const commodity = document.getElementById('lead-commodity').value;
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
   const prompt = `Write a short, professional cold outreach email for a freight broker at Fide Freight to send to ${lead.name}, a ${commodity} shipper. The email should introduce Fide Freight, mention our expertise in ${lead.equipment?.join(' and ') || commodity} freight, and ask for a 10-minute call. Keep it under 150 words. Include a subject line.`;
   nav('docs');
   document.getElementById('email-type').value = 'Load tender';
