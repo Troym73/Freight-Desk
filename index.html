@@ -249,6 +249,109 @@ ${prompt}`;
   } catch(e) { document.getElementById('email-body').textContent = 'Error: ' + e.message; }
 }
 
+
+async function loadLeadStatuses() {
+  if (!currentUser) return;
+  const { data } = await sb.from('lead_statuses').select('*');
+  leadStatuses = {};
+  (data || []).forEach(r => { leadStatuses[r.place_id] = { status: r.status, markedBy: r.marked_by }; });
+}
+
+async function markLead(placeId, idx, status) {
+  if (!currentUser) return;
+  const brokerName = currentProfile?.name || currentUser.email;
+  const current = leadStatuses[placeId]?.status;
+  const newStatus = current === status ? 'none' : status;
+  const { error } = await sb.from('lead_statuses').upsert({
+    place_id: placeId, status: newStatus,
+    marked_by: brokerName, marked_at: new Date().toISOString(), user_id: currentUser.id
+  }, { onConflict: 'place_id' });
+  if (error) { console.error('markLead error:', error.message); return; }
+  leadStatuses[placeId] = { status: newStatus, markedBy: brokerName };
+  const lead = allLeads.find(l => l.placeId === placeId);
+  if (lead) { lead.status = newStatus; lead.markedBy = brokerName; }
+  renderLeads(getFilteredLeads());
+}
+
+async function generateLeads() {
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
+  const city = document.getElementById('lead-city').value.trim();
+  const radius = document.getElementById('lead-radius').value;
+  if (!city) { alert('Please enter a city or region.'); return; }
+
+  const btn = document.getElementById('lead-gen-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Searching...';
+  btn.disabled = true;
+  document.getElementById('leads-empty').style.display = 'none';
+  document.getElementById('leads-results').style.display = 'none';
+
+  const list = document.getElementById('leads-list');
+  list.innerHTML = '<div class="lead-generating"><i class="ti ti-loader"></i>Searching Google Places and scoring leads with AI...<br><span style="font-size:11px;margin-top:6px;display:block">This takes about 15-20 seconds</span></div>';
+  document.getElementById('leads-results').style.display = 'block';
+
+  try {
+    const searchQuery = commodityToSearchQuery(commodity);
+    const mapsRes = await fetch('/.netlify/functions/maps', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'places', query: searchQuery, location: city, radius: parseInt(radius) * 1609 })
+    });
+    const mapsData = await mapsRes.json();
+    const places = mapsData.places || [];
+
+    console.log('Places response:', JSON.stringify(mapsData).slice(0,300));
+
+    if (!places.length) {
+      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found for that search. Try a different city or commodity.';
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>'+errMsg+'</div>';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+      return;
+    }
+
+    const placesList2 = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList2+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50)\n2. Likely equipment types (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. One sentence reason for the score\n5. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","reason":"Large manufacturer with daily outbound volume","opener":"Your opener here"},...]';
+
+    const aiRes = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const aiData = await aiRes.json();
+    const raw = aiData.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let scores = [];
+    try { scores = JSON.parse(clean); } catch(e) { scores = []; }
+
+    await loadLeadStatuses();
+
+    allLeads = places.slice(0, 12).map((p, i) => {
+      const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, reason: '', opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
+      const rawTier = (s.tier || '').toLowerCase().trim();
+      const score = parseInt(s.score) || 60;
+      const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
+      const savedStatus = leadStatuses[p.placeId] || {};
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, reason: s.reason || '', opener: s.opener || '', status: savedStatus.status || 'none', markedBy: savedStatus.markedBy || '' };
+    }).sort((a, b) => b.score - a.score);
+
+    const hot = allLeads.filter(l => l.tier === 'hot').length;
+    const avgScore = allLeads.length ? Math.round(allLeads.reduce((a, l) => a + (parseInt(l.score)||0), 0) / allLeads.length) : 0;
+    document.getElementById('leads-metrics').innerHTML = `
+      <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
+      <div class="dash-metric"><div class="dm-label">🔥 Hot</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
+
+    document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
+    document.getElementById('leads-result-sub').textContent = allLeads.length + ' potential shippers found · sorted by lead score';
+
+    renderLeads(getFilteredLeads());
+
+  } catch(e) {
+    list.innerHTML = '<div class="leads-empty"><i class="ti ti-alert-circle"></i>Error: ' + e.message + '</div>';
+  }
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+}
+
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2654,6 +2757,109 @@ ${prompt}`;
     const data = await r.json();
     document.getElementById('email-body').textContent = data.content?.find(b => b.type === 'text')?.text || 'Error generating email.';
   } catch(e) { document.getElementById('email-body').textContent = 'Error: ' + e.message; }
+}
+
+
+async function loadLeadStatuses() {
+  if (!currentUser) return;
+  const { data } = await sb.from('lead_statuses').select('*');
+  leadStatuses = {};
+  (data || []).forEach(r => { leadStatuses[r.place_id] = { status: r.status, markedBy: r.marked_by }; });
+}
+
+async function markLead(placeId, idx, status) {
+  if (!currentUser) return;
+  const brokerName = currentProfile?.name || currentUser.email;
+  const current = leadStatuses[placeId]?.status;
+  const newStatus = current === status ? 'none' : status;
+  const { error } = await sb.from('lead_statuses').upsert({
+    place_id: placeId, status: newStatus,
+    marked_by: brokerName, marked_at: new Date().toISOString(), user_id: currentUser.id
+  }, { onConflict: 'place_id' });
+  if (error) { console.error('markLead error:', error.message); return; }
+  leadStatuses[placeId] = { status: newStatus, markedBy: brokerName };
+  const lead = allLeads.find(l => l.placeId === placeId);
+  if (lead) { lead.status = newStatus; lead.markedBy = brokerName; }
+  renderLeads(getFilteredLeads());
+}
+
+async function generateLeads() {
+  const commoditySelect = document.getElementById('lead-commodity').value;
+  const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
+  const commodity = commoditySelect === 'custom' ? commodityCustom : commoditySelect;
+  if (!commodity) { alert('Please enter a custom commodity.'); return; }
+  const city = document.getElementById('lead-city').value.trim();
+  const radius = document.getElementById('lead-radius').value;
+  if (!city) { alert('Please enter a city or region.'); return; }
+
+  const btn = document.getElementById('lead-gen-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Searching...';
+  btn.disabled = true;
+  document.getElementById('leads-empty').style.display = 'none';
+  document.getElementById('leads-results').style.display = 'none';
+
+  const list = document.getElementById('leads-list');
+  list.innerHTML = '<div class="lead-generating"><i class="ti ti-loader"></i>Searching Google Places and scoring leads with AI...<br><span style="font-size:11px;margin-top:6px;display:block">This takes about 15-20 seconds</span></div>';
+  document.getElementById('leads-results').style.display = 'block';
+
+  try {
+    const searchQuery = commodityToSearchQuery(commodity);
+    const mapsRes = await fetch('/.netlify/functions/maps', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'places', query: searchQuery, location: city, radius: parseInt(radius) * 1609 })
+    });
+    const mapsData = await mapsRes.json();
+    const places = mapsData.places || [];
+
+    console.log('Places response:', JSON.stringify(mapsData).slice(0,300));
+
+    if (!places.length) {
+      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found for that search. Try a different city or commodity.';
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>'+errMsg+'</div>';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+      return;
+    }
+
+    const placesList2 = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList2+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50)\n2. Likely equipment types (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. One sentence reason for the score\n5. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","reason":"Large manufacturer with daily outbound volume","opener":"Your opener here"},...]';
+
+    const aiRes = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const aiData = await aiRes.json();
+    const raw = aiData.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let scores = [];
+    try { scores = JSON.parse(clean); } catch(e) { scores = []; }
+
+    await loadLeadStatuses();
+
+    allLeads = places.slice(0, 12).map((p, i) => {
+      const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, reason: '', opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
+      const rawTier = (s.tier || '').toLowerCase().trim();
+      const score = parseInt(s.score) || 60;
+      const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
+      const savedStatus = leadStatuses[p.placeId] || {};
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, reason: s.reason || '', opener: s.opener || '', status: savedStatus.status || 'none', markedBy: savedStatus.markedBy || '' };
+    }).sort((a, b) => b.score - a.score);
+
+    const hot = allLeads.filter(l => l.tier === 'hot').length;
+    const avgScore = allLeads.length ? Math.round(allLeads.reduce((a, l) => a + (parseInt(l.score)||0), 0) / allLeads.length) : 0;
+    document.getElementById('leads-metrics').innerHTML = `
+      <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
+      <div class="dash-metric"><div class="dm-label">🔥 Hot</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
+
+    document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
+    document.getElementById('leads-result-sub').textContent = allLeads.length + ' potential shippers found · sorted by lead score';
+
+    renderLeads(getFilteredLeads());
+
+  } catch(e) {
+    list.innerHTML = '<div class="leads-empty"><i class="ti ti-alert-circle"></i>Error: ' + e.message + '</div>';
+  }
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
 }
 
 </script>
