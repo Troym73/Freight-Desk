@@ -75,16 +75,20 @@ async function generateLeads() {
     // Merge places with AI scores
     allLeads = places.slice(0, 12).map((p, i) => {
       const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
-      return { ...p, score: s.score, tier: s.tier || (s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold'), equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+      const rawTier = (s.tier || '').toLowerCase().trim();
+      const score = parseInt(s.score) || 60;
+      const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
     }).sort((a, b) => b.score - a.score);
 
     // Update metrics
     const hot = allLeads.filter(l => l.tier === 'hot').length;
     const warm = allLeads.filter(l => l.tier === 'warm').length;
-    const avgScore = Math.round(allLeads.reduce((a, l) => a + l.score, 0) / allLeads.length);
+    const cold = allLeads.filter(l => l.tier === 'cold').length;
+    const avgScore = allLeads.length ? Math.round(allLeads.reduce((a, l) => a + (parseInt(l.score)||0), 0) / allLeads.length) : 0;
     document.getElementById('leads-metrics').innerHTML = `
       <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
-      <div class="dash-metric"><div class="dm-label">Hot Leads</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">🔥 Hot</div><div class="dm-val green">${hot}</div></div>
       <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
 
     document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
@@ -2572,16 +2576,20 @@ async function generateLeads() {
     // Merge places with AI scores
     allLeads = places.slice(0, 12).map((p, i) => {
       const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
-      return { ...p, score: s.score, tier: s.tier || (s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold'), equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+      const rawTier = (s.tier || '').toLowerCase().trim();
+      const score = parseInt(s.score) || 60;
+      const tier = rawTier === 'hot' ? 'hot' : rawTier === 'warm' ? 'warm' : rawTier === 'cold' ? 'cold' : score >= 80 ? 'hot' : score >= 50 ? 'warm' : 'cold';
+      return { ...p, score, tier, equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
     }).sort((a, b) => b.score - a.score);
 
     // Update metrics
     const hot = allLeads.filter(l => l.tier === 'hot').length;
     const warm = allLeads.filter(l => l.tier === 'warm').length;
-    const avgScore = Math.round(allLeads.reduce((a, l) => a + l.score, 0) / allLeads.length);
+    const cold = allLeads.filter(l => l.tier === 'cold').length;
+    const avgScore = allLeads.length ? Math.round(allLeads.reduce((a, l) => a + (parseInt(l.score)||0), 0) / allLeads.length) : 0;
     document.getElementById('leads-metrics').innerHTML = `
       <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
-      <div class="dash-metric"><div class="dm-label">Hot Leads</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">🔥 Hot</div><div class="dm-val green">${hot}</div></div>
       <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
 
     document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
