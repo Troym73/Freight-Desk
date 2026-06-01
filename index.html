@@ -37,8 +37,10 @@ async function generateLeads() {
     const mapsData = await mapsRes.json();
     const places = mapsData.places || [];
 
+    console.log('Places response:', JSON.stringify(mapsData).slice(0,300));
     if (!places.length) {
-      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>No businesses found for that search. Try a different city or commodity.</div>';
+      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found for that search. Try a different city or commodity.';
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>'+errMsg+'</div>';
       btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
       return;
     }
@@ -2510,8 +2512,10 @@ async function generateLeads() {
     const mapsData = await mapsRes.json();
     const places = mapsData.places || [];
 
+    console.log('Places response:', JSON.stringify(mapsData).slice(0,300));
     if (!places.length) {
-      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>No businesses found for that search. Try a different city or commodity.</div>';
+      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found for that search. Try a different city or commodity.';
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>'+errMsg+'</div>';
       btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
       return;
     }
