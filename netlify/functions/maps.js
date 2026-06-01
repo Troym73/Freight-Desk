@@ -42,47 +42,61 @@ exports.handler = async function(event, context) {
       return { statusCode: 200, headers, body: JSON.stringify({ miles }) };
     }
 
-    // ── PLACES SEARCH (for Lead Generator) ──
+    // ── PLACES SEARCH (Lead Generator) ──
     if (body.type === 'places') {
-      const query = encodeURIComponent(body.query || '');
-      const location = encodeURIComponent(body.location || '');
-      const radius = body.radius || 40000;
+      const query = body.query || '';
+      const location = body.location || '';
+      const radius = Math.min(body.radius || 40000, 50000);
 
-      // First geocode the location to get lat/lng
-      const geoData = await googleRequest(`/maps/api/geocode/json?address=${location}&key=${KEY}`);
-      const loc = geoData.results?.[0]?.geometry?.location;
-      if (!loc) return { statusCode: 200, headers, body: JSON.stringify({ places: [] }) };
+      console.log('Places search:', { query, location, radius });
 
-      // Then search nearby
-      const searchData = await googleRequest(
-        `/maps/api/place/textsearch/json?query=${query}&location=${loc.lat},${loc.lng}&radius=${radius}&key=${KEY}`
-      );
+      // Step 1: Geocode the city
+      const geoData = await googleRequest(`/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${KEY}`);
+      console.log('Geocode status:', geoData.status, 'results:', geoData.results?.length);
 
-      const places = (searchData.results || []).slice(0, 12).map(p => ({
-        name: p.name,
-        address: p.formatted_address,
-        phone: p.formatted_phone_number || '',
-        website: p.website || '',
-        rating: p.rating || null,
-        placeId: p.place_id,
-      }));
+      if (!geoData.results?.length || geoData.status !== 'OK') {
+        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Could not geocode location: ' + location + ' — status: ' + geoData.status }) };
+      }
 
-      // Get phone/website details for top results
-      const detailed = await Promise.all(places.slice(0, 8).map(async p => {
+      const loc = geoData.results[0].geometry.location;
+      console.log('Geocoded to:', loc);
+
+      // Step 2: Text search for businesses
+      const searchUrl = `/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${loc.lat},${loc.lng}&radius=${radius}&key=${KEY}`;
+      console.log('Search URL path:', searchUrl.replace(KEY, 'HIDDEN'));
+
+      const searchData = await googleRequest(searchUrl);
+      console.log('Search status:', searchData.status, 'results:', searchData.results?.length, 'error:', searchData.error_message);
+
+      if (searchData.status !== 'OK' && searchData.status !== 'ZERO_RESULTS') {
+        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Places API error: ' + searchData.status + ' — ' + (searchData.error_message || '') }) };
+      }
+
+      const rawPlaces = (searchData.results || []).slice(0, 12);
+
+      // Step 3: Get phone + website for each place
+      const places = await Promise.all(rawPlaces.map(async p => {
+        let phone = '', website = '';
         try {
-          const det = await googleRequest(`/maps/api/place/details/json?place_id=${p.placeId}&fields=name,formatted_phone_number,website&key=${KEY}`);
-          return {
-            ...p,
-            phone: det.result?.formatted_phone_number || p.phone || '',
-            website: det.result?.website || p.website || '',
-          };
-        } catch(e) { return p; }
+          const det = await googleRequest(`/maps/api/place/details/json?place_id=${p.place_id}&fields=formatted_phone_number,website&key=${KEY}`);
+          phone = det.result?.formatted_phone_number || '';
+          website = det.result?.website || '';
+        } catch(e) { console.log('Detail fetch failed for', p.name); }
+        return {
+          name: p.name,
+          address: p.formatted_address || '',
+          phone,
+          website,
+          rating: p.rating || null,
+          placeId: p.place_id,
+        };
       }));
 
-      return { statusCode: 200, headers, body: JSON.stringify({ places: [...detailed, ...places.slice(8)] }) };
+      console.log('Returning', places.length, 'places');
+      return { statusCode: 200, headers, body: JSON.stringify({ places }) };
     }
 
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown request type' }) };
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown request type: ' + body.type }) };
 
   } catch(err) {
     console.error('Maps error:', err.message);
@@ -103,11 +117,11 @@ function googleRequest(path) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Parse error: ' + data.slice(0, 100))); }
+        catch(e) { reject(new Error('Parse error: ' + data.slice(0, 200))); }
       });
     });
     req.on('error', reject);
-    req.setTimeout(10000, () => { req.destroy(); reject(new Error('Request timed out')); });
+    req.setTimeout(15000, () => { req.destroy(); reject(new Error('Request timed out')); });
     req.end();
   });
 }
