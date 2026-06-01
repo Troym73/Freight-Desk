@@ -1276,9 +1276,10 @@ function setupRealtime() {
 // Check existing session on load
 window.addEventListener('load', async () => {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) { await loadApp(session.user); }
-
-  // Setup Supabase tables if needed
+  if (session) {
+    // Pre-fill email but don't auto-login — user still needs to click Sign In
+    document.getElementById('login-email').value = session.user.email;
+  }
   await ensureTables();
 });
 
