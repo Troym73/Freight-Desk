@@ -2478,6 +2478,27 @@ function toggleCustomCommodity(val) {
   }
 }
 
+function commodityToSearchQuery(commodity) {
+  const map = {
+    'Auto Parts & Manufacturing': 'auto parts manufacturer',
+    'Food & Beverage': 'food manufacturer distributor',
+    'Steel & Metal Products': 'steel metal manufacturer',
+    'Lumber & Building Materials': 'lumber building materials supplier',
+    'Chemicals & Plastics': 'chemical plastics manufacturer',
+    'Agriculture & Grain': 'grain elevator agricultural cooperative',
+    'Paper & Packaging': 'paper packaging manufacturer',
+    'Machinery & Equipment': 'industrial machinery equipment manufacturer',
+    'Electronics & Tech': 'electronics manufacturer distributor',
+    'Automotive Assembly': 'automotive assembly plant',
+    'Construction Materials': 'construction materials supplier',
+    'Plastics & Rubber': 'plastics rubber manufacturer',
+    'Medical & Pharmaceutical': 'medical pharmaceutical manufacturer',
+    'Furniture & Home Goods': 'furniture manufacturer distributor',
+    'Textiles & Apparel': 'textile apparel manufacturer',
+  };
+  return map[commodity] || commodity;
+}
+
 async function generateLeads() {
   const commoditySelect = document.getElementById('lead-commodity').value;
   const commodityCustom = document.getElementById('lead-commodity-custom').value.trim();
