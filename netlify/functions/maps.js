@@ -48,51 +48,59 @@ exports.handler = async function(event, context) {
       const location = body.location || '';
       const radius = Math.min(body.radius || 40000, 50000);
 
-      console.log('Places search:', { query, location, radius });
-
-      // Step 1: Geocode the city
-      const geoData = await googleRequest(`/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${KEY}`);
-      console.log('Geocode status:', geoData.status, 'results:', geoData.results?.length);
+      // Step 1: Geocode + Text Search in PARALLEL
+      const [geoData, ] = await Promise.all([
+        googleRequest(`/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${KEY}`)
+      ]);
 
       if (!geoData.results?.length || geoData.status !== 'OK') {
-        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Could not geocode location: ' + location + ' — status: ' + geoData.status }) };
+        return { statusCode: 200, headers, body: JSON.stringify({
+          places: [],
+          error: 'Could not geocode location: ' + location + ' — status: ' + geoData.status
+        })};
       }
 
       const loc = geoData.results[0].geometry.location;
-      console.log('Geocoded to:', loc);
 
-      // Step 2: Text search for businesses
-      const searchUrl = `/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${loc.lat},${loc.lng}&radius=${radius}&key=${KEY}`;
-      console.log('Search URL path:', searchUrl.replace(KEY, 'HIDDEN'));
-
-      const searchData = await googleRequest(searchUrl);
-      console.log('Search status:', searchData.status, 'results:', searchData.results?.length, 'error:', searchData.error_message);
+      // Step 2: Text search (includes name, address, place_id in one call)
+      const searchData = await googleRequest(
+        `/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${loc.lat},${loc.lng}&radius=${radius}&fields=name,formatted_address,place_id,formatted_phone_number,website,rating,international_phone_number&key=${KEY}`
+      );
 
       if (searchData.status !== 'OK' && searchData.status !== 'ZERO_RESULTS') {
-        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Places API error: ' + searchData.status + ' — ' + (searchData.error_message || '') }) };
+        return { statusCode: 200, headers, body: JSON.stringify({
+          places: [],
+          error: 'Places API error: ' + searchData.status + ' — ' + (searchData.error_message || '')
+        })};
       }
 
-      const rawPlaces = (searchData.results || []).slice(0, 12);
+      const rawPlaces = (searchData.results || []).slice(0, 10);
 
-      // Step 3: Get phone + website for each place
-      const places = await Promise.all(rawPlaces.map(async p => {
-        let phone = '', website = '';
-        try {
-          const det = await googleRequest(`/maps/api/place/details/json?place_id=${p.place_id}&fields=formatted_phone_number,website&key=${KEY}`);
-          phone = det.result?.formatted_phone_number || '';
-          website = det.result?.website || '';
-        } catch(e) { console.log('Detail fetch failed for', p.name); }
-        return {
-          name: p.name,
-          address: p.formatted_address || '',
-          phone,
-          website,
-          rating: p.rating || null,
-          placeId: p.place_id,
-        };
-      }));
+      // Step 3: Fetch details for ALL places in PARALLEL (not sequential)
+      // Only need phone + website which textsearch doesn't return
+      const detailPromises = rawPlaces.map(p =>
+        googleRequest(`/maps/api/place/details/json?place_id=${p.place_id}&fields=formatted_phone_number,website&key=${KEY}`)
+          .then(det => ({
+            name: p.name,
+            address: p.formatted_address || '',
+            phone: det.result?.formatted_phone_number || '',
+            website: det.result?.website || '',
+            rating: p.rating || null,
+            placeId: p.place_id,
+          }))
+          .catch(() => ({
+            name: p.name,
+            address: p.formatted_address || '',
+            phone: '',
+            website: '',
+            rating: p.rating || null,
+            placeId: p.place_id,
+          }))
+      );
 
-      console.log('Returning', places.length, 'places');
+      // Run ALL detail fetches simultaneously
+      const places = await Promise.all(detailPromises);
+
       return { statusCode: 200, headers, body: JSON.stringify({ places }) };
     }
 
