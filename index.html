@@ -2586,41 +2586,6 @@ async function confirmDNU(mc) {
 let showHidden = false;
 let leadStatuses = {}; // placeId -> { status, markedBy, markedAt }
 
-async function loadLeadStatuses() {
-  if (!currentUser) return;
-  const { data } = await sb.from('lead_statuses').select('*');
-  leadStatuses = {};
-  (data || []).forEach(r => { leadStatuses[r.place_id] = { status: r.status, markedBy: r.marked_by, markedAt: r.marked_at }; });
-}
-
-async function markLead(placeId, idx, status) {
-  if (!currentUser) return;
-  const brokerName = currentProfile?.name || currentUser.email;
-
-  // Toggle off if same status clicked again
-  const current = leadStatuses[placeId]?.status;
-  const newStatus = current === status ? 'none' : status;
-
-  const { error } = await sb.from('lead_statuses').upsert({
-    place_id: placeId,
-    status: newStatus,
-    marked_by: brokerName,
-    marked_at: new Date().toISOString(),
-    user_id: currentUser.id
-  }, { onConflict: 'place_id' });
-
-  if (error) { console.error('markLead error:', error.message); return; }
-
-  leadStatuses[placeId] = { status: newStatus, markedBy: brokerName };
-
-  // Update allLeads array
-  const lead = allLeads.find(l => l.placeId === placeId);
-  if (lead) { lead.status = newStatus; lead.markedBy = brokerName; }
-
-  // Re-render
-  const filtered = getFilteredLeads();
-  renderLeads(filtered);
-}
 
 function getFilteredLeads() {
   let leads = currentLeadFilter === 'all' ? allLeads
@@ -2641,16 +2606,6 @@ function toggleHidden(btn) {
 let allLeads = [];
 let currentLeadFilter = 'all';
 
-function toggleCustomCommodity(val) {
-  const customInput = document.getElementById('lead-commodity-custom');
-  if (val === 'custom') {
-    customInput.style.display = 'block';
-    customInput.focus();
-  } else {
-    customInput.style.display = 'none';
-  }
-}
-
 
 function commodityToSearchQuery(commodity) {
   const map = {
@@ -2669,47 +2624,6 @@ function commodityToSearchQuery(commodity) {
   return map[commodity] || commodity;
 }
 
-function filterLeads(filter, btn) {
-  currentLeadFilter = filter;
-  document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  renderLeads(getFilteredLeads());
-}
-
-function renderLeads(leads) {
-  const list = document.getElementById('leads-list');
-  if (!leads.length) { list.innerHTML = '<div class="leads-empty" style="padding:24px"><i class="ti ti-search"></i>No leads match this filter.</div>'; return; }
-  list.innerHTML = leads.map((l, i) => `
-    <div class="lead-card">
-      <div class="lead-card-top">
-        <div>
-          <div class="lead-name">${l.name}</div>
-          <div class="lead-addr"><i class="ti ti-map-pin" style="font-size:11px"></i>${l.address || '—'}</div>
-        </div>
-        <span class="lead-score ${l.tier}">${l.tier === 'hot' ? '🔥' : l.tier === 'warm' ? '☀️' : '❄️'} ${l.tier.charAt(0).toUpperCase()+l.tier.slice(1)} · ${l.score}%</span>
-      </div>
-      <div class="lead-details-row">
-        ${l.phone ? `<div class="lead-detail"><i class="ti ti-phone"></i>${l.phone}</div>` : ''}
-        ${l.website ? `<div class="lead-detail"><i class="ti ti-world"></i><a href="${l.website.startsWith('http')?l.website:'https://'+l.website}" style="color:var(--bl);text-decoration:none" target="_blank">${l.website.replace(/^https?:\/\//,'').split('/')[0]}</a></div>` : ''}
-        ${l.equipment?.length ? `<div class="lead-detail"><i class="ti ti-truck"></i>${l.equipment.join(', ')}</div>` : ''}
-        ${l.commodity ? `<div class="lead-detail"><i class="ti ti-package"></i>${l.commodity}</div>` : ''}
-      </div>
-      ${l.reason ? `<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--tx2);margin-bottom:8px;padding:5px 9px;background:var(--sf2);border-radius:6px;border:0.5px solid var(--bd)"><i class="ti ti-chart-bar" style="font-size:12px;color:var(--am);flex-shrink:0;margin-top:1px"></i><span><strong style="color:var(--tx);font-weight:500">Why this score:</strong> ${l.reason}</span></div>` : ''}
-      ${l.opener ? `<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>${l.opener}</div>` : ''}
-      <div class="lead-status-bar">
-        <span style="font-size:10px;color:var(--tx3);margin-right:2px">Mark as:</span>
-        <button class="lead-status-chip ${l.status==='contacted'?'contacted active':''}" onclick="markLead('${l.placeId}',${i},'contacted')"><i class="ti ti-phone-check" style="font-size:10px;margin-right:3px"></i>Contacted</button>
-        <button class="lead-status-chip ${l.status==='not-a-fit'?'not-a-fit active':''}" onclick="markLead('${l.placeId}',${i},'not-a-fit')"><i class="ti ti-x" style="font-size:10px;margin-right:3px"></i>Not a fit</button>
-        <button class="lead-status-chip ${l.status==='save-later'?'save-later active':''}" onclick="markLead('${l.placeId}',${i},'save-later')"><i class="ti ti-bookmark" style="font-size:10px;margin-right:3px"></i>Save for later</button>
-        ${l.status && l.status !== 'none' ? `<span style="font-size:10px;color:var(--tx3);margin-left:4px">· marked by ${l.markedBy||'team'}</span>` : ''}
-      </div>
-      <div class="lead-actions">
-        <button class="lead-btn primary" onclick="draftLeadEmail(${i})"><i class="ti ti-mail"></i>Draft email</button>
-        <button class="lead-btn" onclick="copyOpener(${i})"><i class="ti ti-copy"></i>Copy opener</button>
-        ${l.phone ? `<a href="tel:${l.phone}" class="lead-btn" style="text-decoration:none"><i class="ti ti-phone"></i>Call</a>` : ''}
-      </div>
-    </div>`).join('');
-}
 
 function copyOpener(i) {
   const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
