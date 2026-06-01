@@ -6,7 +6,164 @@
 <title>FreightDesk AI — Fide Freight</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23BA7517'/><text y='24' x='3' font-size='22'>🚛</text></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ── LEAD GENERATOR ──
+let allLeads = [];
+let currentLeadFilter = 'all';
+
+async function generateLeads() {
+  const commodity = document.getElementById('lead-commodity').value;
+  const city = document.getElementById('lead-city').value.trim();
+  const radius = document.getElementById('lead-radius').value;
+  if (!city) { alert('Please enter a city or region.'); return; }
+
+  const btn = document.getElementById('lead-gen-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Searching...';
+  btn.disabled = true;
+  document.getElementById('leads-empty').style.display = 'none';
+  document.getElementById('leads-results').style.display = 'none';
+
+  const list = document.getElementById('leads-list');
+  list.innerHTML = '<div class="lead-generating"><i class="ti ti-loader"></i>Searching Google Places and scoring leads with AI...<br><span style="font-size:11px;margin-top:6px;display:block">This takes about 15-20 seconds</span></div>';
+  document.getElementById('leads-results').style.display = 'block';
+
+  try {
+    // Step 1: Google Places search
+    const searchQuery = commodityToSearchQuery(commodity);
+    const mapsRes = await fetch('/.netlify/functions/maps', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'places', query: searchQuery, location: city, radius: parseInt(radius) * 1609 })
+    });
+    const mapsData = await mapsRes.json();
+    const places = mapsData.places || [];
+
+    if (!places.length) {
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>No businesses found for that search. Try a different city or commodity.</div>';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+      return;
+    }
+
+    // Step 2: AI scoring and opener generation
+    const placesList = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","opener":"Your opener here"},...]';
+
+    const aiRes = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const aiData = await aiRes.json();
+    const raw = aiData.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let scores = [];
+    try { scores = JSON.parse(clean); } catch(e) { scores = []; }
+
+    // Merge places with AI scores
+    allLeads = places.slice(0, 12).map((p, i) => {
+      const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
+      return { ...p, score: s.score, tier: s.tier || (s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold'), equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+    }).sort((a, b) => b.score - a.score);
+
+    // Update metrics
+    const hot = allLeads.filter(l => l.tier === 'hot').length;
+    const warm = allLeads.filter(l => l.tier === 'warm').length;
+    const avgScore = Math.round(allLeads.reduce((a, l) => a + l.score, 0) / allLeads.length);
+    document.getElementById('leads-metrics').innerHTML = `
+      <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
+      <div class="dash-metric"><div class="dm-label">Hot Leads</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
+
+    document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
+    document.getElementById('leads-result-sub').textContent = allLeads.length + ' potential shippers found · sorted by lead score';
+
+    renderLeads(allLeads);
+
+  } catch(e) {
+    list.innerHTML = '<div class="leads-empty"><i class="ti ti-alert-circle"></i>Error generating leads: ' + e.message + '</div>';
+  }
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+}
+
+function commodityToSearchQuery(commodity) {
+  const map = {
+    'Auto Parts & Manufacturing': 'auto parts manufacturer',
+    'Food & Beverage': 'food manufacturer distributor',
+    'Steel & Metal Products': 'steel metal manufacturer',
+    'Lumber & Building Materials': 'lumber building materials supplier',
+    'Chemicals & Plastics': 'chemical plastics manufacturer',
+    'Agriculture & Grain': 'grain elevator agricultural cooperative',
+    'Paper & Packaging': 'paper packaging manufacturer',
+    'Machinery & Equipment': 'industrial machinery equipment manufacturer',
+    'Electronics & Tech': 'electronics manufacturer distributor',
+    'Automotive Assembly': 'automotive assembly plant',
+    'Construction Materials': 'construction materials supplier',
+  };
+  return map[commodity] || commodity;
+}
+
+function filterLeads(filter, btn) {
+  currentLeadFilter = filter;
+  document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = filter === 'all' ? allLeads : filter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm');
+  renderLeads(filtered);
+}
+
+function renderLeads(leads) {
+  const list = document.getElementById('leads-list');
+  if (!leads.length) { list.innerHTML = '<div class="leads-empty" style="padding:24px"><i class="ti ti-search"></i>No leads match this filter.</div>'; return; }
+  list.innerHTML = leads.map((l, i) => `
+    <div class="lead-card">
+      <div class="lead-card-top">
+        <div>
+          <div class="lead-name">${l.name}</div>
+          <div class="lead-addr"><i class="ti ti-map-pin" style="font-size:11px"></i>${l.address || '—'}</div>
+        </div>
+        <span class="lead-score ${l.tier}">${l.tier === 'hot' ? '🔥' : l.tier === 'warm' ? '☀️' : '❄️'} ${l.tier.charAt(0).toUpperCase()+l.tier.slice(1)} · ${l.score}%</span>
+      </div>
+      <div class="lead-details-row">
+        ${l.phone ? `<div class="lead-detail"><i class="ti ti-phone"></i>${l.phone}</div>` : ''}
+        ${l.website ? `<div class="lead-detail"><i class="ti ti-world"></i><a href="${l.website.startsWith('http')?l.website:'https://'+l.website}" style="color:var(--bl);text-decoration:none" target="_blank">${l.website.replace(/^https?:\/\//,'').split('/')[0]}</a></div>` : ''}
+        ${l.equipment?.length ? `<div class="lead-detail"><i class="ti ti-truck"></i>${l.equipment.join(', ')}</div>` : ''}
+        ${l.commodity ? `<div class="lead-detail"><i class="ti ti-package"></i>${l.commodity}</div>` : ''}
+      </div>
+      ${l.opener ? `<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>${l.opener}</div>` : ''}
+      <div class="lead-actions">
+        <button class="lead-btn primary" onclick="draftLeadEmail(${i})"><i class="ti ti-mail"></i>Draft email</button>
+        <button class="lead-btn" onclick="copyOpener(${i})"><i class="ti ti-copy"></i>Copy opener</button>
+        ${l.phone ? `<a href="tel:${l.phone}" class="lead-btn" style="text-decoration:none"><i class="ti ti-phone"></i>Call</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function copyOpener(i) {
+  const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
+  if (!lead?.opener) return;
+  navigator.clipboard.writeText(lead.opener).then(() => alert('Opener copied to clipboard!'));
+}
+
+async function draftLeadEmail(i) {
+  const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
+  if (!lead) return;
+  const commodity = document.getElementById('lead-commodity').value;
+  const prompt = `Write a short, professional cold outreach email for a freight broker at Fide Freight to send to ${lead.name}, a ${commodity} shipper. The email should introduce Fide Freight, mention our expertise in ${lead.equipment?.join(' and ') || commodity} freight, and ask for a 10-minute call. Keep it under 150 words. Include a subject line.`;
+  nav('docs');
+  document.getElementById('email-type').value = 'Load tender';
+  document.getElementById('email-notes').value = `Company: ${lead.name}
+Address: ${lead.address}
+Commodity: ${lead.commodity}
+Equipment: ${lead.equipment?.join(', ')}
+
+${prompt}`;
+  document.getElementById('email-result').classList.add('show');
+  document.getElementById('email-body').textContent = 'Drafting email...';
+  try {
+    const r = await apiCall({ model: 'claude-sonnet-4-5', max_tokens: 400, system: SYSTEM, messages: [{ role: 'user', content: prompt }] });
+    const data = await r.json();
+    document.getElementById('email-body').textContent = data.content?.find(b => b.type === 'text')?.text || 'Error generating email.';
+  } catch(e) { document.getElementById('email-body').textContent = 'Error: ' + e.message; }
+}
+
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -299,6 +456,35 @@ table.bt td.red{color:var(--rd)}
 .cp-item-name{font-size:13px;font-weight:600;color:var(--tx)}
 .cp-item-mc{font-size:11px;color:var(--tx3)}
 
+/* ── LEAD GENERATOR ── */
+.leads-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.leads-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.lead-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);padding:14px 16px;margin-bottom:10px}
+.lead-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:10px}
+.lead-name{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:2px}
+.lead-addr{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.lead-score{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.lead-score.hot{background:var(--gn-lt);color:var(--gn);border:0.5px solid var(--gn)}
+.lead-score.warm{background:var(--am-lt);color:var(--am);border:0.5px solid var(--am-mid)}
+.lead-score.cold{background:var(--sf3);color:var(--tx2);border:0.5px solid var(--bd2)}
+.lead-details-row{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.lead-detail{font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:5px}
+.lead-detail i{font-size:12px;color:var(--am);flex-shrink:0}
+.lead-opener{background:var(--sf2);border-left:2px solid var(--am);border-radius:0 6px 6px 0;padding:8px 11px;font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px}
+.lead-opener-label{font-size:9px;font-weight:600;color:var(--am);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.lead-actions{display:flex;gap:6px;flex-wrap:wrap}
+.lead-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+.lead-btn:hover{background:var(--sf3)}
+.lead-btn.primary{background:var(--am);color:#fff;border:none}
+.lead-btn.primary:hover{opacity:.9}
+.score-filter-row{display:flex;gap:6px;margin-bottom:12px}
+.score-chip{font-size:12px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;font-family:inherit}
+.score-chip.active{background:var(--am-lt);color:var(--am);border-color:var(--am-mid)}
+.leads-empty{text-align:center;padding:48px 20px;color:var(--tx3)}
+.leads-empty i{font-size:40px;margin-bottom:12px;display:block}
+.lead-generating{text-align:center;padding:40px 20px;color:var(--tx2)}
+.lead-generating i{font-size:32px;color:var(--am);margin-bottom:10px;display:block;animation:spin 1s linear infinite}
+
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
 #modal-bg.show{display:flex}
@@ -363,6 +549,7 @@ table.bt td.red{color:var(--rd)}
     <button class="nb" onclick="nav('docs')" id="n-docs"><i class="ti ti-tools"></i>Broker Tools</button>
     <button class="nb" onclick="nav('quotes')" id="n-quotes"><i class="ti ti-chart-bar"></i>My Quotes</button>
     <button class="nb" onclick="nav('carriers')" id="n-carriers"><i class="ti ti-truck-delivery"></i>Carriers</button>
+    <button class="nb" onclick="nav('leads')" id="n-leads"><i class="ti ti-bulb"></i>Lead Generator</button>
     <button class="nb" id="n-admin" onclick="nav('admin')" style="display:none"><i class="ti ti-shield-check"></i>Admin Dashboard</button>
 
     <div style="flex:1;overflow-y:auto">
@@ -790,6 +977,72 @@ table.bt td.red{color:var(--rd)}
         <div class="bt-header">Manage Users</div>
         <div id="users-list"></div>
         <button class="invite-btn" onclick="showInviteModal()"><i class="ti ti-plus"></i>Invite team member</button>
+      </div>
+    </div>
+
+    <!-- LEAD GENERATOR TAB -->
+    <div class="view" id="v-leads">
+      <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-bulb" style="color:var(--am);margin-right:6px"></i>Lead Generator</h1>
+
+      <div class="section-box">
+        <h3><i class="ti ti-search"></i>Search Parameters</h3>
+        <div class="leads-form-grid">
+          <div class="field">
+            <label>Commodity / Industry</label>
+            <select id="lead-commodity">
+              <option value="Auto Parts & Manufacturing">Auto Parts & Manufacturing</option>
+              <option value="Food & Beverage">Food & Beverage</option>
+              <option value="Steel & Metal Products">Steel & Metal Products</option>
+              <option value="Lumber & Building Materials">Lumber & Building Materials</option>
+              <option value="Chemicals & Plastics">Chemicals & Plastics</option>
+              <option value="Agriculture & Grain">Agriculture & Grain</option>
+              <option value="Paper & Packaging">Paper & Packaging</option>
+              <option value="Machinery & Equipment">Machinery & Equipment</option>
+              <option value="Electronics & Tech">Electronics & Tech</option>
+              <option value="Automotive Assembly">Automotive Assembly</option>
+              <option value="Construction Materials">Construction Materials</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>City / Region</label>
+            <input type="text" id="lead-city" placeholder="e.g. Chicago, IL" onkeydown="if(event.key==='Enter')generateLeads()">
+          </div>
+          <div class="field">
+            <label>Search Radius</label>
+            <select id="lead-radius">
+              <option value="10">10 miles</option>
+              <option value="25" selected>25 miles</option>
+              <option value="50">50 miles</option>
+              <option value="100">100 miles</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="generateLeads()" id="lead-gen-btn">
+          <i class="ti ti-sparkles"></i>Generate Leads
+        </button>
+      </div>
+
+      <div id="leads-results" style="display:none">
+        <div class="leads-metrics" id="leads-metrics"></div>
+        <div class="section-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--tx)" id="leads-result-title">Results</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:2px" id="leads-result-sub"></div>
+            </div>
+          </div>
+          <div class="score-filter-row" id="score-filter-row">
+            <button class="score-chip active" onclick="filterLeads('all',this)">All leads</button>
+            <button class="score-chip" onclick="filterLeads('hot',this)">Hot only</button>
+            <button class="score-chip" onclick="filterLeads('warm',this)">Warm & up</button>
+          </div>
+          <div id="leads-list"></div>
+        </div>
+      </div>
+
+      <div id="leads-empty" class="leads-empty">
+        <i class="ti ti-bulb"></i>
+        Select a commodity and city above, then click Generate Leads to find potential shippers in that area.
       </div>
     </div>
 
@@ -2224,6 +2477,163 @@ async function confirmDNU(mc) {
   carriersDB[mc].status = 'dnu';
   await saveCarriersToDB();
   renderCarriers();
+}
+
+
+// ── LEAD GENERATOR ──
+let allLeads = [];
+let currentLeadFilter = 'all';
+
+async function generateLeads() {
+  const commodity = document.getElementById('lead-commodity').value;
+  const city = document.getElementById('lead-city').value.trim();
+  const radius = document.getElementById('lead-radius').value;
+  if (!city) { alert('Please enter a city or region.'); return; }
+
+  const btn = document.getElementById('lead-gen-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Searching...';
+  btn.disabled = true;
+  document.getElementById('leads-empty').style.display = 'none';
+  document.getElementById('leads-results').style.display = 'none';
+
+  const list = document.getElementById('leads-list');
+  list.innerHTML = '<div class="lead-generating"><i class="ti ti-loader"></i>Searching Google Places and scoring leads with AI...<br><span style="font-size:11px;margin-top:6px;display:block">This takes about 15-20 seconds</span></div>';
+  document.getElementById('leads-results').style.display = 'block';
+
+  try {
+    // Step 1: Google Places search
+    const searchQuery = commodityToSearchQuery(commodity);
+    const mapsRes = await fetch('/.netlify/functions/maps', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'places', query: searchQuery, location: city, radius: parseInt(radius) * 1609 })
+    });
+    const mapsData = await mapsRes.json();
+    const places = mapsData.places || [];
+
+    if (!places.length) {
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>No businesses found for that search. Try a different city or commodity.</div>';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+      return;
+    }
+
+    // Step 2: AI scoring and opener generation
+    const placesList2 = places.slice(0,12).map((p,i) => (i+1)+'. '+p.name+' — '+(p.address||'')+(p.phone?' — '+p.phone:'')+(p.website?' — '+p.website:'')).join('\n');
+    const prompt = 'You are a freight brokerage lead scoring assistant for Fide Freight.\n\nI searched Google Places for "'+commodity+'" businesses near "'+city+'" within '+radius+' miles and found these results:\n'+placesList2+'\n\nFor each business, provide:\n1. A lead score (Hot 80-100, Warm 50-79, Cold below 50) based on how likely they are to be an active shipper needing freight brokerage\n2. Likely equipment types they would ship (Dry Van, Flatbed, Reefer, Step Deck, RGN, Hotshot)\n3. Likely commodity description (2-5 words)\n4. A personalized cold call opener (2-3 sentences) for a broker at Fide Freight\n\nRespond ONLY with a JSON array, no markdown:\n[{"index":1,"score":85,"tier":"hot","equipment":["Flatbed"],"commodity":"Steel coils","opener":"Your opener here"},...]';
+
+    const aiRes = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const aiData = await aiRes.json();
+    const raw = aiData.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let scores = [];
+    try { scores = JSON.parse(clean); } catch(e) { scores = []; }
+
+    // Merge places with AI scores
+    allLeads = places.slice(0, 12).map((p, i) => {
+      const s = scores.find(x => x.index === i + 1) || { score: 60, tier: 'warm', equipment: [], commodity: commodity, opener: 'Hi, this is Fide Freight calling. We specialize in ' + commodity.toLowerCase() + ' freight and would love to connect about your shipping needs.' };
+      return { ...p, score: s.score, tier: s.tier || (s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold'), equipment: s.equipment || [], commodity: s.commodity || commodity, opener: s.opener || '' };
+    }).sort((a, b) => b.score - a.score);
+
+    // Update metrics
+    const hot = allLeads.filter(l => l.tier === 'hot').length;
+    const warm = allLeads.filter(l => l.tier === 'warm').length;
+    const avgScore = Math.round(allLeads.reduce((a, l) => a + l.score, 0) / allLeads.length);
+    document.getElementById('leads-metrics').innerHTML = `
+      <div class="dash-metric"><div class="dm-label">Leads Found</div><div class="dm-val">${allLeads.length}</div></div>
+      <div class="dash-metric"><div class="dm-label">Hot Leads</div><div class="dm-val green">${hot}</div></div>
+      <div class="dash-metric"><div class="dm-label">Avg Score</div><div class="dm-val amber">${avgScore}%</div></div>`;
+
+    document.getElementById('leads-result-title').textContent = commodity + ' · ' + city;
+    document.getElementById('leads-result-sub').textContent = allLeads.length + ' potential shippers found · sorted by lead score';
+
+    renderLeads(allLeads);
+
+  } catch(e) {
+    list.innerHTML = '<div class="leads-empty"><i class="ti ti-alert-circle"></i>Error generating leads: ' + e.message + '</div>';
+  }
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+}
+
+function commodityToSearchQuery(commodity) {
+  const map = {
+    'Auto Parts & Manufacturing': 'auto parts manufacturer',
+    'Food & Beverage': 'food manufacturer distributor',
+    'Steel & Metal Products': 'steel metal manufacturer',
+    'Lumber & Building Materials': 'lumber building materials supplier',
+    'Chemicals & Plastics': 'chemical plastics manufacturer',
+    'Agriculture & Grain': 'grain elevator agricultural cooperative',
+    'Paper & Packaging': 'paper packaging manufacturer',
+    'Machinery & Equipment': 'industrial machinery equipment manufacturer',
+    'Electronics & Tech': 'electronics manufacturer distributor',
+    'Automotive Assembly': 'automotive assembly plant',
+    'Construction Materials': 'construction materials supplier',
+  };
+  return map[commodity] || commodity;
+}
+
+function filterLeads(filter, btn) {
+  currentLeadFilter = filter;
+  document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = filter === 'all' ? allLeads : filter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm');
+  renderLeads(filtered);
+}
+
+function renderLeads(leads) {
+  const list = document.getElementById('leads-list');
+  if (!leads.length) { list.innerHTML = '<div class="leads-empty" style="padding:24px"><i class="ti ti-search"></i>No leads match this filter.</div>'; return; }
+  list.innerHTML = leads.map((l, i) => `
+    <div class="lead-card">
+      <div class="lead-card-top">
+        <div>
+          <div class="lead-name">${l.name}</div>
+          <div class="lead-addr"><i class="ti ti-map-pin" style="font-size:11px"></i>${l.address || '—'}</div>
+        </div>
+        <span class="lead-score ${l.tier}">${l.tier === 'hot' ? '🔥' : l.tier === 'warm' ? '☀️' : '❄️'} ${l.tier.charAt(0).toUpperCase()+l.tier.slice(1)} · ${l.score}%</span>
+      </div>
+      <div class="lead-details-row">
+        ${l.phone ? `<div class="lead-detail"><i class="ti ti-phone"></i>${l.phone}</div>` : ''}
+        ${l.website ? `<div class="lead-detail"><i class="ti ti-world"></i><a href="${l.website.startsWith('http')?l.website:'https://'+l.website}" style="color:var(--bl);text-decoration:none" target="_blank">${l.website.replace(/^https?:\/\//,'').split('/')[0]}</a></div>` : ''}
+        ${l.equipment?.length ? `<div class="lead-detail"><i class="ti ti-truck"></i>${l.equipment.join(', ')}</div>` : ''}
+        ${l.commodity ? `<div class="lead-detail"><i class="ti ti-package"></i>${l.commodity}</div>` : ''}
+      </div>
+      ${l.opener ? `<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>${l.opener}</div>` : ''}
+      <div class="lead-actions">
+        <button class="lead-btn primary" onclick="draftLeadEmail(${i})"><i class="ti ti-mail"></i>Draft email</button>
+        <button class="lead-btn" onclick="copyOpener(${i})"><i class="ti ti-copy"></i>Copy opener</button>
+        ${l.phone ? `<a href="tel:${l.phone}" class="lead-btn" style="text-decoration:none"><i class="ti ti-phone"></i>Call</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function copyOpener(i) {
+  const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
+  if (!lead?.opener) return;
+  navigator.clipboard.writeText(lead.opener).then(() => alert('Opener copied to clipboard!'));
+}
+
+async function draftLeadEmail(i) {
+  const lead = (currentLeadFilter === 'all' ? allLeads : currentLeadFilter === 'hot' ? allLeads.filter(l => l.tier === 'hot') : allLeads.filter(l => l.tier === 'hot' || l.tier === 'warm'))[i];
+  if (!lead) return;
+  const commodity = document.getElementById('lead-commodity').value;
+  const prompt = `Write a short, professional cold outreach email for a freight broker at Fide Freight to send to ${lead.name}, a ${commodity} shipper. The email should introduce Fide Freight, mention our expertise in ${lead.equipment?.join(' and ') || commodity} freight, and ask for a 10-minute call. Keep it under 150 words. Include a subject line.`;
+  nav('docs');
+  document.getElementById('email-type').value = 'Load tender';
+  document.getElementById('email-notes').value = `Company: ${lead.name}
+Address: ${lead.address}
+Commodity: ${lead.commodity}
+Equipment: ${lead.equipment?.join(', ')}
+
+${prompt}`;
+  document.getElementById('email-result').classList.add('show');
+  document.getElementById('email-body').textContent = 'Drafting email...';
+  try {
+    const r = await apiCall({ model: 'claude-sonnet-4-5', max_tokens: 400, system: SYSTEM, messages: [{ role: 'user', content: prompt }] });
+    const data = await r.json();
+    document.getElementById('email-body').textContent = data.content?.find(b => b.type === 'text')?.text || 'Error generating email.';
+  } catch(e) { document.getElementById('email-body').textContent = 'Error: ' + e.message; }
 }
 
 </script>
