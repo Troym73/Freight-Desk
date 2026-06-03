@@ -248,7 +248,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 
 /* ── ADMIN DASHBOARD ── */
 #v-admin{padding:20px}
-.admin-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.admin-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
 .broker-table-wrap{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rlg);overflow:hidden;margin-bottom:20px}
 .bt-header{padding:12px 16px;border-bottom:0.5px solid var(--bd);font-size:13px;font-weight:600}
 table.bt{width:100%;border-collapse:collapse}
@@ -884,6 +884,7 @@ table.bt td.red{color:var(--rd)}
         <div class="dash-metric"><div class="dm-label">Total Quoted</div><div class="dm-val" id="adm-total">0</div></div>
         <div class="dash-metric"><div class="dm-label">Total Won</div><div class="dm-val green" id="adm-won">0</div></div>
         <div class="dash-metric"><div class="dm-label">Team Win Rate</div><div class="dm-val blue" id="adm-winrate">—</div></div>
+        <div class="dash-metric"><div class="dm-label">Revenue Quoted</div><div class="dm-val" id="adm-rev-quoted">$0</div></div>
         <div class="dash-metric"><div class="dm-label">Revenue Won</div><div class="dm-val amber" id="adm-revenue">$0</div></div>
         <div class="dash-metric"><div class="dm-label">Margin Won</div><div class="dm-val green" id="adm-margin">$0</div></div>
       </div>
@@ -1783,7 +1784,7 @@ async function loadAdminDashboard() {
   document.getElementById('adm-won').textContent = won.length;
   document.getElementById('adm-winrate').textContent = all.length > 0 ? winRate+'%' : '—';
   document.getElementById('adm-revenue').textContent = '$'+won.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
-  if(document.getElementById('adm-rev-quoted')) document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+q.quote_total,0).toLocaleString(undefined,{maximumFractionDigits:0});
+  document.getElementById('adm-rev-quoted').textContent = '$'+all.reduce((a,q)=>a+(q.quote_total||0),0).toLocaleString(undefined,{maximumFractionDigits:0});
   document.getElementById('adm-margin').textContent = '$'+won.reduce((a,q)=>a+q.gross_margin,0).toLocaleString(undefined,{maximumFractionDigits:0});
 
   // Group by broker
@@ -2524,13 +2525,17 @@ async function generateLeads() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'places', query: searchQuery, location: city, radius: parseInt(radius) * 1609 })
     });
-    const mapsData = await mapsRes.json();
+    const mapsText = await mapsRes.text();
+    console.log('Maps raw response:', mapsText.slice(0,300));
+    let mapsData;
+    try { mapsData = JSON.parse(mapsText); } catch(e) {
+      list.innerHTML = '<div class="leads-empty"><i class="ti ti-alert-circle"></i>Maps function error — check Netlify function logs. Response: '+mapsText.slice(0,200)+'</div>';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
+      return;
+    }
     const places = mapsData.places || [];
-
-    console.log('Places response:', JSON.stringify(mapsData).slice(0,300));
-
     if (!places.length) {
-      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found for that search. Try a different city or commodity.';
+      const errMsg = mapsData.error ? 'API error: '+mapsData.error : 'No businesses found. Try a different city or commodity.';
       list.innerHTML = '<div class="leads-empty"><i class="ti ti-search"></i>'+errMsg+'</div>';
       btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate Leads'; btn.disabled = false;
       return;
@@ -2543,7 +2548,9 @@ async function generateLeads() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
     });
-    const aiData = await aiRes.json();
+    const aiText = await aiRes.text();
+    let aiData;
+    try { aiData = JSON.parse(aiText); } catch(e) { aiData = {}; }
     const raw = aiData.content?.find(b => b.type === 'text')?.text || '[]';
     const clean = raw.replace(/```json|```/g, '').trim();
     let scores = [];
