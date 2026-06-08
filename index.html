@@ -1043,7 +1043,7 @@ const SUPABASE_KEY = 'sb_publishable_PSEql9KDx51VIs9aH0O4fg_9tY5O0nR';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com'];
+const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com','zach@fidefreight.com'];
 function buildSystemPrompt() {
   const base = 'You are FreightDesk AI, an expert freight broker assistant for Fide Freight. You help with rates, compliance, HOS rules, carrier vetting, BOL requirements, cargo claims, detention, TONU, layover, and all freight brokering operations. Be concise and practical.';
   const brokerInfo = currentProfile ? '\n\nBroker: ' + currentProfile.name + ' (' + currentProfile.role + ')' : '';
