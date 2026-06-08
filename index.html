@@ -6,6 +6,13 @@
 <title>FreightDesk AI — Fide Freight</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23BA7517'/><text y='24' x='3' font-size='22'>🚛</text></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script>
+function initCarrierMap() {
+  window.googleMapsReady = true;
+  if (window.pendingMapInit) { window.pendingMapInit(); window.pendingMapInit = null; }
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzWKJ92AMHuvBFhXHX85X1LYj0IuHiZY8&callback=initCarrierMap"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -335,6 +342,18 @@ table.bt td.red{color:var(--rd)}
 .lead-status-chip.save-later{background:var(--am-lt);color:var(--am);border-color:var(--am-mid)}
 .lead-status-chip.active{font-weight:700;opacity:1}
 .lead-card.not-a-fit-card{opacity:0.45;filter:grayscale(0.4)}
+
+/* ── CARRIER MAP ── */
+.carrier-map-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.map-filter-chip{font-size:11px;padding:4px 11px;border-radius:20px;border:0.5px solid var(--bd2);background:var(--sf2);color:var(--tx2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s}
+.map-filter-chip:hover{background:var(--sf3)}
+.map-filter-chip.active{background:var(--am-lt);color:var(--am);border-color:var(--am-mid);font-weight:600}
+.map-view-toggle{display:flex;border-radius:8px;overflow:hidden;border:0.5px solid var(--bd2);flex-shrink:0;margin-left:auto}
+.mvt-btn{font-size:12px;padding:6px 12px;cursor:pointer;border:none;font-family:inherit;font-weight:500;background:var(--sf2);color:var(--tx3);display:flex;align-items:center;gap:5px}
+.mvt-btn.active{background:var(--am);color:#fff}
+#carrier-map-container{width:100%;height:480px;border-radius:var(--rlg);overflow:hidden;border:0.5px solid var(--bd);margin-bottom:14px;position:relative;background:var(--sf2)}
+.map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--tx3);font-size:13px}
+.map-no-homebases{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--tx3);font-size:13px;text-align:center;padding:20px}
 
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
@@ -973,8 +992,51 @@ table.bt td.red{color:var(--rd)}
 
       <div id="mc-lookup-result" style="margin-bottom:12px"></div>
 
-      <div id="carriers-list">
-        <div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>
+      <!-- View toggle + filters -->
+      <div class="carrier-map-bar">
+        <div class="map-view-toggle">
+          <button class="mvt-btn active" id="mvt-map" onclick="setCarrierView('map')"><i class="ti ti-map-2"></i>Map</button>
+          <button class="mvt-btn" id="mvt-list" onclick="setCarrierView('list')"><i class="ti ti-list"></i>List</button>
+        </div>
+        <div style="width:0.5px;height:24px;background:var(--bd2);margin:0 2px;flex-shrink:0"></div>
+        <span style="font-size:11px;color:var(--tx3);flex-shrink:0">Equipment:</span>
+        <button class="map-filter-chip active" onclick="toggleEquipFilter('all',this)" id="ef-all">All</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('Dry Van',this)">Dry Van</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('Flatbed',this)">Flatbed</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('Reefer',this)">Reefer</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('Step Deck',this)">Step Deck</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('RGN',this)">RGN</button>
+        <button class="map-filter-chip" onclick="toggleEquipFilter('Hotshot',this)">Hotshot</button>
+        <div style="width:0.5px;height:24px;background:var(--bd2);margin:0 2px;flex-shrink:0"></div>
+        <span style="font-size:11px;color:var(--tx3);flex-shrink:0">Status:</span>
+        <button class="map-filter-chip active" onclick="toggleStatusFilter('all',this)" id="sf-all">All</button>
+        <button class="map-filter-chip" onclick="toggleStatusFilter('approved',this)">Approved</button>
+        <button class="map-filter-chip" onclick="toggleStatusFilter('cp',this)">Send CP</button>
+      </div>
+
+      <!-- MAP VIEW -->
+      <div id="carrier-map-view">
+        <div id="carrier-map-container">
+          <div class="map-loading" id="map-loading">
+            <i class="ti ti-loader" style="font-size:28px;animation:spin 1s linear infinite;color:var(--am)"></i>
+            <span>Loading carrier map...</span>
+          </div>
+          <div id="gmap" style="width:100%;height:100%"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#15803d;flex-shrink:0"></div>Approved</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#BA7517;flex-shrink:0"></div>Good to Send CP</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0"></div>Pending</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#b91c1c;flex-shrink:0"></div>DNU</div>
+          <span style="font-size:11px;color:var(--tx3);margin-left:auto"><i class="ti ti-info-circle" style="margin-right:3px"></i>Carriers need a Home Base set to appear on map</span>
+        </div>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div id="carrier-list-view" style="display:none">
+        <div id="carriers-list">
+          <div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>
+        </div>
       </div>
     </div>
 
@@ -1043,7 +1105,7 @@ const SUPABASE_KEY = 'sb_publishable_PSEql9KDx51VIs9aH0O4fg_9tY5O0nR';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com','zach@fidefreight.com'];
+const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com'];
 function buildSystemPrompt() {
   const base = 'You are FreightDesk AI, an expert freight broker assistant for Fide Freight. You help with rates, compliance, HOS rules, carrier vetting, BOL requirements, cargo claims, detention, TONU, layover, and all freight brokering operations. Be concise and practical.';
   const brokerInfo = currentProfile ? '\n\nBroker: ' + currentProfile.name + ' (' + currentProfile.role + ')' : '';
@@ -1184,6 +1246,7 @@ function nav(id) {
   if (nb) nb.classList.add('active');
   if (id === 'quotes') loadMyQuotes();
   if (id === 'admin') loadAdminDashboard();
+  if (id === 'carriers' && carrierView === 'map') setTimeout(initOrRefreshMap, 100);
 }
 
 // ── CHAT ──
@@ -2873,6 +2936,179 @@ async function generateODReport() {
   btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate OD Permit Report';
   btn.disabled = false;
 }
+
+
+// ── CARRIER MAP ──
+let carrierMap = null;
+let carrierMapMarkers = [];
+let activeEquipFilter = 'all';
+let activeStatusFilter = 'all';
+let carrierView = 'map';
+let mapInfoWindow = null;
+
+function setCarrierView(view) {
+  carrierView = view;
+  document.getElementById('carrier-map-view').style.display = view === 'map' ? 'block' : 'none';
+  document.getElementById('carrier-list-view').style.display = view === 'list' ? 'block' : 'none';
+  document.getElementById('mvt-map').classList.toggle('active', view === 'map');
+  document.getElementById('mvt-list').classList.toggle('active', view === 'list');
+  if (view === 'map') initOrRefreshMap();
+  else renderCarriers();
+}
+
+function toggleEquipFilter(val, btn) {
+  activeEquipFilter = val;
+  document.querySelectorAll('.map-filter-chip').forEach(c => {
+    if (c.id && c.id.startsWith('ef-')) c.classList.remove('active');
+    else if (!c.id && c.textContent.trim() !== 'All' && ['Dry Van','Flatbed','Reefer','Step Deck','RGN','Hotshot'].includes(c.textContent.trim())) c.classList.remove('active');
+  });
+  btn.classList.add('active');
+  if (carrierView === 'map') refreshMapMarkers();
+  else renderCarriers();
+}
+
+function toggleStatusFilter(val, btn) {
+  activeStatusFilter = val;
+  document.querySelectorAll('.map-filter-chip').forEach(c => {
+    if (c.id && c.id.startsWith('sf-')) c.classList.remove('active');
+  });
+  btn.classList.add('active');
+  if (carrierView === 'map') refreshMapMarkers();
+  else renderCarriers();
+}
+
+function getFilteredCarriers() {
+  return Object.values(carriersDB).filter(c => {
+    if (activeStatusFilter !== 'all' && c.status !== activeStatusFilter) return false;
+    if (activeEquipFilter !== 'all') {
+      if (!c.equipment || !c.equipment.includes(activeEquipFilter)) return false;
+    }
+    return true;
+  });
+}
+
+function pinColor(status) {
+  if (status === 'approved') return '#15803d';
+  if (status === 'cp') return '#BA7517';
+  if (status === 'dnu') return '#b91c1c';
+  return '#6b7280';
+}
+
+function initOrRefreshMap() {
+  const doInit = () => {
+    const container = document.getElementById('gmap');
+    if (!container) return;
+    document.getElementById('map-loading').style.display = 'none';
+
+    if (!carrierMap) {
+      carrierMap = new google.maps.Map(container, {
+        center: { lat: 39.5, lng: -98.35 },
+        zoom: 4,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        styles: document.documentElement.getAttribute('data-theme') === 'dark' ? darkMapStyle : []
+      });
+      mapInfoWindow = new google.maps.InfoWindow();
+    }
+    refreshMapMarkers();
+  };
+
+  if (window.googleMapsReady && typeof google !== 'undefined') {
+    doInit();
+  } else {
+    window.pendingMapInit = doInit;
+    document.getElementById('map-loading').style.display = 'flex';
+  }
+}
+
+function refreshMapMarkers() {
+  if (!carrierMap) return;
+  // Clear existing markers
+  carrierMapMarkers.forEach(m => m.setMap(null));
+  carrierMapMarkers = [];
+
+  const filtered = getFilteredCarriers();
+  const withBase = filtered.filter(c => c.homeBase && c.homeBase.trim());
+  const noBase = filtered.filter(c => !c.homeBase || !c.homeBase.trim());
+
+  if (!withBase.length) {
+    const noBaseEl = document.getElementById('map-loading');
+    noBaseEl.innerHTML = '<i class="ti ti-map-off" style="font-size:32px;color:var(--tx3)"></i><span style="color:var(--tx3)">No carriers with a Home Base set. Add a Home Base in carrier details to show them here.</span>';
+    noBaseEl.style.display = 'flex';
+    return;
+  }
+  document.getElementById('map-loading').style.display = 'none';
+
+  // Geocode each carrier home base and place marker
+  withBase.forEach(c => {
+    geocodeAddress(c.homeBase, (latlng) => {
+      if (!latlng) return;
+      const color = pinColor(c.status);
+      const marker = new google.maps.Marker({
+        position: latlng,
+        map: carrierMap,
+        title: c.name,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+          scale: 10
+        }
+      });
+
+      const equipStr = c.equipment && c.equipment.length ? c.equipment.join(', ') : 'Not specified';
+      const statusLabel = { approved:'✓ Approved', cp:'📋 Send CP', pending:'⏳ Pending', 'dnu-suggested':'🚩 DNU Suggested', dnu:'🚫 Do Not Use' }[c.status] || c.status;
+      const infoContent = `
+        <div style="font-family:-apple-system,sans-serif;min-width:200px;max-width:260px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">${c.name}</div>
+          <div style="font-size:11px;color:#666;margin-bottom:6px">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}</div>
+          <div style="font-size:11px;margin-bottom:3px"><strong>Status:</strong> ${statusLabel}</div>
+          <div style="font-size:11px;margin-bottom:3px"><strong>Equipment:</strong> ${equipStr}</div>
+          <div style="font-size:11px;margin-bottom:3px"><strong>Home Base:</strong> ${c.homeBase}</div>
+          ${c.lanes ? `<div style="font-size:11px;margin-bottom:3px"><strong>Lanes:</strong> ${c.lanes}</div>` : ''}
+          ${c.dispatcher ? `<div style="font-size:11px;margin-bottom:3px"><strong>Dispatcher:</strong> ${c.dispatcher}</div>` : ''}
+          ${c.phone ? `<div style="font-size:11px;margin-bottom:3px"><strong>Phone:</strong> ${c.phone}</div>` : ''}
+          ${c.email ? `<div style="font-size:11px"><strong>Email:</strong> ${c.email}</div>` : ''}
+        </div>`;
+
+      marker.addListener('click', () => {
+        mapInfoWindow.setContent(infoContent);
+        mapInfoWindow.open(carrierMap, marker);
+      });
+      carrierMapMarkers.push(marker);
+    });
+  });
+}
+
+// Geocode cache to avoid repeat API calls
+const geocodeCache = {};
+function geocodeAddress(address, callback) {
+  if (geocodeCache[address]) { callback(geocodeCache[address]); return; }
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({ address }, (results, status) => {
+    if (status === 'OK' && results[0]) {
+      const loc = results[0].geometry.location;
+      geocodeCache[address] = { lat: loc.lat(), lng: loc.lng() };
+      callback(geocodeCache[address]);
+    } else { callback(null); }
+  });
+}
+
+// Dark mode map style
+const darkMapStyle = [
+  {elementType:'geometry',stylers:[{color:'#212121'}]},
+  {elementType:'labels.icon',stylers:[{visibility:'off'}]},
+  {elementType:'labels.text.fill',stylers:[{color:'#757575'}]},
+  {elementType:'labels.text.stroke',stylers:[{color:'#212121'}]},
+  {featureType:'road',elementType:'geometry',stylers:[{color:'#383838'}]},
+  {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#484848'}]},
+  {featureType:'water',elementType:'geometry',stylers:[{color:'#000000'}]},
+  {featureType:'administrative',elementType:'geometry',stylers:[{color:'#757575'}]},
+  {featureType:'poi',stylers:[{visibility:'off'}]}
+];
 
 </script>
 </body>
