@@ -3241,6 +3241,14 @@ async function saveAsTemplate() {
     acc: parseFloat(document.getElementById('acc').value) || null,
     origin: pu,
     destination: del,
+    dat_7day: parseFloat(document.getElementById('d30').value) || null,
+    dat_15day: parseFloat(document.getElementById('d60').value) || null,
+    dat_90day: parseFloat(document.getElementById('d1y').value) || null,
+    dat_1year: parseFloat(document.getElementById('d13m').value) || null,
+    dat_forecast: parseFloat(document.getElementById('d35f').value) || null,
+    ts_low: parseFloat(document.getElementById('ts-low').value) || null,
+    ts_high: parseFloat(document.getElementById('ts-high').value) || null,
+    rate_basis: document.getElementById('rate-basis').value || 'avg',
     created_at: new Date().toISOString()
   }]);
   if (error) {
@@ -3258,21 +3266,35 @@ async function saveAsTemplate() {
 async function loadTemplate(id) {
   const t = quoteTemplates.find(x => x.id === id);
   if (!t) return;
+  // Lane
   if (t.origin) document.getElementById('loc-pu').value = t.origin;
   if (t.destination) document.getElementById('loc-del').value = t.destination;
   if (t.miles) document.getElementById('miles').value = t.miles;
+  // Margin & rate settings
   if (t.margin_pct) document.getElementById('margin').value = t.margin_pct;
   if (t.fsc) document.getElementById('fsc').value = t.fsc;
   if (t.acc) document.getElementById('acc').value = t.acc;
-  // Match equipment
+  if (t.rate_basis) document.getElementById('rate-basis').value = t.rate_basis;
+  // DAT fields
+  if (t.dat_7day) document.getElementById('d30').value = t.dat_7day;
+  if (t.dat_15day) document.getElementById('d60').value = t.dat_15day;
+  if (t.dat_90day) document.getElementById('d1y').value = t.dat_90day;
+  if (t.dat_1year) document.getElementById('d13m').value = t.dat_1year;
+  if (t.dat_forecast) document.getElementById('d35f').value = t.dat_forecast;
+  // Truckstop
+  if (t.ts_low) document.getElementById('ts-low').value = t.ts_low;
+  if (t.ts_high) document.getElementById('ts-high').value = t.ts_high;
+  if (t.ts_low && t.ts_high) calcTsAvg();
+  // Equipment
   const equipSel = document.getElementById('equip');
   if (equipSel && t.equipment) {
     for (const opt of equipSel.options) {
       if (opt.text === t.equipment) { equipSel.value = opt.value; break; }
     }
   }
-  // Auto-get miles if origin/dest set
-  if (t.origin && t.destination) autoGetMiles();
+  // Auto-calculate everything
+  autoGetMiles();
+  autoCalc();
 }
 
 async function deleteTemplate(id) {
