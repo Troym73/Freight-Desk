@@ -6,77 +6,7 @@
 <title>FreightDesk AI — Fide Freight</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23BA7517'/><text y='24' x='3' font-size='22'>🚛</text></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-function renderLeads(leads) {
-  const list = document.getElementById('leads-list');
-  if (!leads.length) {
-    list.innerHTML = '<div class="leads-empty" style="padding:24px"><i class="ti ti-search"></i>No leads match this filter.</div>';
-    return;
-  }
-  list.innerHTML = leads.map((l, i) => {
-    const tier = l.tier || 'cold';
-    const score = l.score || 0;
-    const tierIcon = tier==='hot'?'🔥':tier==='warm'?'☀️':'❄️';
-    const tierLabel = tier.charAt(0).toUpperCase()+tier.slice(1);
-    const phone = l.phone || '';
-    const website = l.website || '';
-    const address = l.address || '—';
-    const name = l.name || '—';
-    const status = l.status || 'none';
-    const markedBy = l.markedBy || 'team';
-    const safeId = (l.placeId||'').replace(/[^a-zA-Z0-9]/g,'');
-
-    const websiteHost = website ? website.replace(/^https?:\/\//,'').split('/')[0] : '';
-    const websiteHref = website ? (website.startsWith('http')?website:'https://'+website) : '';
-
-    return '<div class="lead-card '+(status==='not-a-fit'?'not-a-fit-card':'')+'" data-placeid="'+safeId+'" data-idx="'+i+'">' +
-      '<div class="lead-card-top">' +
-        '<div><div class="lead-name">'+name+'</div>' +
-        '<div class="lead-addr"><i class="ti ti-map-pin" style="font-size:11px"></i>'+address+'</div></div>' +
-        '<span class="lead-score '+tier+'">'+tierIcon+' '+tierLabel+' · '+score+'%</span>' +
-      '</div>' +
-      '<div class="lead-details-row">' +
-        (phone?'<div class="lead-detail"><i class="ti ti-phone"></i>'+phone+'</div>':'') +
-        (website?'<div class="lead-detail"><i class="ti ti-world"></i><a href="'+websiteHref+'" style="color:var(--bl);text-decoration:none" target="_blank">'+websiteHost+'</a></div>':'') +
-        ((l.equipment&&l.equipment.length)?'<div class="lead-detail"><i class="ti ti-truck"></i>'+l.equipment.join(', ')+'</div>':'') +
-        (l.commodity?'<div class="lead-detail"><i class="ti ti-package"></i>'+l.commodity+'</div>':'') +
-      '</div>' +
-      (l.reason?'<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--tx2);margin-bottom:8px;padding:5px 9px;background:var(--sf2);border-radius:6px;border:0.5px solid var(--bd)"><i class="ti ti-chart-bar" style="font-size:12px;color:var(--am);flex-shrink:0;margin-top:1px"></i><span><strong style="color:var(--tx);font-weight:500">Why this score:</strong> '+l.reason+'</span></div>':'') +
-      (l.opener?'<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>'+l.opener+'</div>':'') +
-      '<div class="lead-status-bar">' +
-        '<span style="font-size:10px;color:var(--tx3);margin-right:2px">Mark as:</span>' +
-        '<button class="lead-status-chip '+(status==='contacted'?'contacted active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="contacted"><i class="ti ti-phone-check" style="font-size:10px;margin-right:3px"></i>Contacted</button>' +
-        '<button class="lead-status-chip '+(status==='not-a-fit'?'not-a-fit active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="not-a-fit"><i class="ti ti-x" style="font-size:10px;margin-right:3px"></i>Not a fit</button>' +
-        '<button class="lead-status-chip '+(status==='save-later'?'save-later active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="save-later"><i class="ti ti-bookmark" style="font-size:10px;margin-right:3px"></i>Save for later</button>' +
-        (status&&status!=='none'?'<span style="font-size:10px;color:var(--tx3);margin-left:4px">· '+markedBy+'</span>':'') +
-      '</div>' +
-      '<div class="lead-actions">' +
-        '<button class="lead-btn primary" onclick="draftLeadEmail('+i+')"><i class="ti ti-mail"></i>Draft email</button>' +
-        '<button class="lead-btn" onclick="copyOpener('+i+')"><i class="ti ti-copy"></i>Copy opener</button>' +
-        (phone?'<a href="tel:'+phone+'" class="lead-btn" style="text-decoration:none"><i class="ti ti-phone"></i>Call</a>':'') +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function handleMarkLead(btn) {
-  const safeId = btn.getAttribute('data-placeid');
-  const idx = parseInt(btn.getAttribute('data-idx'));
-  const status = btn.getAttribute('data-status');
-  // Find original placeId from allLeads
-  const lead = allLeads[idx];
-  if (lead) markLead(lead.placeId, idx, status);
-}
-
-
-function filterLeads(filter, btn) {
-  currentLeadFilter = filter;
-  document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  renderLeads(ge
-}
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -2586,4 +2516,106 @@ async function generateLeads() {
 }
 
 
+
+function renderLeads(leads) {
+  const list = document.getElementById('leads-list');
+  if (!leads.length) {
+    list.innerHTML = '<div class="leads-empty" style="padding:24px"><i class="ti ti-search"></i>No leads match this filter.</div>';
+    return;
+  }
+  list.innerHTML = leads.map((l, i) => {
+    const tier = l.tier || 'cold';
+    const score = l.score || 0;
+    const tierIcon = tier==='hot'?'🔥':tier==='warm'?'☀️':'❄️';
+    const tierLabel = tier.charAt(0).toUpperCase()+tier.slice(1);
+    const phone = l.phone || '';
+    const website = l.website || '';
+    const address = l.address || '—';
+    const name = l.name || '—';
+    const status = l.status || 'none';
+    const markedBy = l.markedBy || 'team';
+    const safeId = (l.placeId||'').replace(/[^a-zA-Z0-9]/g,'');
+
+    const websiteHost = website ? website.replace(/^https?:\/\//,'').split('/')[0] : '';
+    const websiteHref = website ? (website.startsWith('http')?website:'https://'+website) : '';
+
+    return '<div class="lead-card '+(status==='not-a-fit'?'not-a-fit-card':'')+'" data-placeid="'+safeId+'" data-idx="'+i+'">' +
+      '<div class="lead-card-top">' +
+        '<div><div class="lead-name">'+name+'</div>' +
+        '<div class="lead-addr"><i class="ti ti-map-pin" style="font-size:11px"></i>'+address+'</div></div>' +
+        '<span class="lead-score '+tier+'">'+tierIcon+' '+tierLabel+' · '+score+'%</span>' +
+      '</div>' +
+      '<div class="lead-details-row">' +
+        (phone?'<div class="lead-detail"><i class="ti ti-phone"></i>'+phone+'</div>':'') +
+        (website?'<div class="lead-detail"><i class="ti ti-world"></i><a href="'+websiteHref+'" style="color:var(--bl);text-decoration:none" target="_blank">'+websiteHost+'</a></div>':'') +
+        ((l.equipment&&l.equipment.length)?'<div class="lead-detail"><i class="ti ti-truck"></i>'+l.equipment.join(', ')+'</div>':'') +
+        (l.commodity?'<div class="lead-detail"><i class="ti ti-package"></i>'+l.commodity+'</div>':'') +
+      '</div>' +
+      (l.reason?'<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--tx2);margin-bottom:8px;padding:5px 9px;background:var(--sf2);border-radius:6px;border:0.5px solid var(--bd)"><i class="ti ti-chart-bar" style="font-size:12px;color:var(--am);flex-shrink:0;margin-top:1px"></i><span><strong style="color:var(--tx);font-weight:500">Why this score:</strong> '+l.reason+'</span></div>':'') +
+      (l.opener?'<div class="lead-opener"><div class="lead-opener-label">Suggested cold call opener</div>'+l.opener+'</div>':'') +
+      '<div class="lead-status-bar">' +
+        '<span style="font-size:10px;color:var(--tx3);margin-right:2px">Mark as:</span>' +
+        '<button class="lead-status-chip '+(status==='contacted'?'contacted active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="contacted"><i class="ti ti-phone-check" style="font-size:10px;margin-right:3px"></i>Contacted</button>' +
+        '<button class="lead-status-chip '+(status==='not-a-fit'?'not-a-fit active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="not-a-fit"><i class="ti ti-x" style="font-size:10px;margin-right:3px"></i>Not a fit</button>' +
+        '<button class="lead-status-chip '+(status==='save-later'?'save-later active':'')+'" onclick="handleMarkLead(this)" data-placeid="'+safeId+'" data-idx="'+i+'" data-status="save-later"><i class="ti ti-bookmark" style="font-size:10px;margin-right:3px"></i>Save for later</button>' +
+        (status&&status!=='none'?'<span style="font-size:10px;color:var(--tx3);margin-left:4px">· '+markedBy+'</span>':'') +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<button class="lead-btn primary" onclick="draftLeadEmail('+i+')"><i class="ti ti-mail"></i>Draft email</button>' +
+        '<button class="lead-btn" onclick="copyOpener('+i+')"><i class="ti ti-copy"></i>Copy opener</button>' +
+        (phone?'<a href="tel:'+phone+'" class="lead-btn" style="text-decoration:none"><i class="ti ti-phone"></i>Call</a>':'') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function handleMarkLead(btn) {
+  const safeId = btn.getAttribute('data-placeid');
+  const idx = parseInt(btn.getAttribute('data-idx'));
+  const status = btn.getAttribute('data-status');
+  // Find original placeId from allLeads
+  const lead = allLeads[idx];
+  if (lead) markLead(lead.placeId, idx, status);
+}
+
+
+function filterLeads(filter, btn) {
+  currentLeadFilter = filter;
+  document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeads(getFilteredLeads());
+}
+
+
+function copyOpener(i) {
+  const leads = getFilteredLeads();
+  const lead = leads[i];
+  if (!lead?.opener) return;
+  navigator.clipboard.writeText(lead.opener).then(() => alert('Opener copied to clipboard!'));
+}
+
+async function draftLeadEmail(i) {
+  const leads = getFilteredLeads();
+  const lead = leads[i];
+  if (!lead) return;
+  const commodity = document.getElementById('lead-commodity').value === 'custom'
+    ? document.getElementById('lead-commodity-custom').value
+    : document.getElementById('lead-commodity').value;
+  nav('docs');
+  const emailNotes = document.getElementById('email-notes');
+  emailNotes.value = 'Company: '+lead.name+'\nAddress: '+lead.address+'\nCommodity: '+lead.commodity+'\nEquipment: '+(lead.equipment||[]).join(', ');
+  const emailResult = document.getElementById('email-result');
+  const emailBody = document.getElementById('email-body');
+  emailResult.classList.add('show');
+  emailBody.textContent = 'Drafting cold outreach email...';
+  const prompt = 'Write a short cold outreach email from a freight broker at Fide Freight to '+lead.name+', a '+commodity+' shipper. Introduce Fide Freight, mention expertise in '+(lead.equipment||[]).join(' and ')+' freight, and request a 10-minute call. Under 150 words. Include subject line.';
+  try {
+    const r = await apiCall({ model: 'claude-sonnet-4-5', max_tokens: 400, system: SYSTEM, messages: [{ role: 'user', content: prompt }] });
+    const data = await r.json();
+    emailBody.textContent = data.content?.find(b => b.type === 'text')?.text || 'Error generating email.';
+  } catch(e) { emailBody.textContent = 'Error: ' + e.message; }
+}
+
 </script>
+</body>
+</html>
