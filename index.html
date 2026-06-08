@@ -11,8 +11,16 @@ function initCarrierMap() {
   window.googleMapsReady = true;
   if (window.pendingMapInit) { window.pendingMapInit(); window.pendingMapInit = null; }
 }
+function gm_authFailure() {
+  window.googleMapsAuthFailed = true;
+  const loading = document.getElementById('map-loading');
+  if (loading) {
+    loading.innerHTML = '<i class="ti ti-map-off" style="font-size:28px;color:var(--rd)"></i><span style="color:var(--rd);font-size:12px;text-align:center">Maps API key needs domain authorization.<br>See instructions below.</span>';
+    loading.style.display = 'flex';
+  }
+}
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzWKJ92AMHuvBFhXHX85X1LYj0IuHiZY8&callback=initCarrierMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzWKJ92AMHuvBFhXHX85X1LYj0IuHiZY8&callback=initCarrierMap&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2295,19 +2303,27 @@ function buildCarrierCard(c, isAdmin) {
 }
 
 function renderCarriers() {
-  const carriers = Object.values(carriersDB);
-  document.getElementById('c-total').textContent = carriers.length;
-  document.getElementById('c-approved').textContent = carriers.filter(c=>c.status==='approved').length;
-  document.getElementById('c-pending').textContent = carriers.filter(c=>c.status==='pending'||c.status==='cp').length;
-  document.getElementById('c-dnu').textContent = carriers.filter(c=>c.status==='dnu').length;
+  const allCarriers = Object.values(carriersDB);
+  // Update metrics from ALL carriers regardless of filter
+  document.getElementById('c-total').textContent = allCarriers.length;
+  document.getElementById('c-approved').textContent = allCarriers.filter(c=>c.status==='approved').length;
+  document.getElementById('c-pending').textContent = allCarriers.filter(c=>c.status==='pending'||c.status==='cp').length;
+  document.getElementById('c-dnu').textContent = allCarriers.filter(c=>c.status==='dnu').length;
 
   const list = document.getElementById('carriers-list');
-  if (!carriers.length) {
+  if (!allCarriers.length) {
     list.innerHTML = '<div class="empty-state"><i class="ti ti-truck-delivery"></i>No carriers yet. Look up an MC number to get started.</div>';
     return;
   }
 
+  // Apply filters for list view
+  const carriers = getFilteredCarriers();
   const isAdmin = ADMIN_EMAILS.includes(currentUser?.email);
+
+  if (!carriers.length) {
+    list.innerHTML = '<div class="empty-state"><i class="ti ti-filter"></i>No carriers match the current filters.</div>';
+    return;
+  }
   list.innerHTML = carriers.map(c => buildCarrierCard(c, isAdmin)).join('');
 }
 
