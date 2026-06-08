@@ -779,10 +779,11 @@ table.bt td.red{color:var(--rd)}
           <div id="dims-result" style="display:none;margin-bottom:10px">
             <div style="background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden">
               <div style="padding:8px 12px;border-bottom:0.5px solid var(--bd)"><span style="font-size:12px;font-weight:600;color:var(--am);display:flex;align-items:center;gap:6px"><i class="ti ti-ruler"></i><span id="dims-equip-label">—</span></span></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
-                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Length</div><div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-length">—</div></div>
-                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Width</div><div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-width">—</div></div>
-                <div style="padding:14px 16px;text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Height</div><div style="font-size:26px;font-weight:800;color:var(--tx)" id="dims-height">—</div></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0">
+                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Length</div><div style="font-size:22px;font-weight:800;color:var(--tx)" id="dims-length">—</div></div>
+                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Width</div><div style="font-size:22px;font-weight:800;color:var(--tx)" id="dims-width">—</div></div>
+                <div style="padding:14px 16px;border-right:0.5px solid var(--bd);text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Height</div><div style="font-size:22px;font-weight:800;color:var(--tx)" id="dims-height">—</div></div>
+                <div style="padding:14px 16px;text-align:center"><div style="font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Weight</div><div style="font-size:22px;font-weight:800;color:var(--tx)" id="dims-weight-row">—</div></div>
               </div>
               <div id="dims-notes" style="padding:10px 14px;border-top:0.5px solid var(--bd);font-size:12px;color:var(--tx2);line-height:1.6;display:none"></div>
             </div>
@@ -994,6 +995,11 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_EMAILS = ['troy@fidefreight.com','devon@fidefreight.com','matias@fidefreight.com'];
+function buildSystemPrompt() {
+  const base = 'You are FreightDesk AI, an expert freight broker assistant for Fide Freight. You help with rates, compliance, HOS rules, carrier vetting, BOL requirements, cargo claims, detention, TONU, layover, and all freight brokering operations. Be concise and practical.';
+  const brokerInfo = currentProfile ? '\n\nBroker: ' + currentProfile.name + ' (' + currentProfile.role + ')' : '';
+  return base + brokerInfo;
+}
 const SYSTEM = `You are FreightDesk AI, an expert freight broker assistant for Fide Freight. You help with rates, compliance, HOS rules, carrier vetting, BOL requirements, cargo claims, and all freight brokering operations. Be concise and practical.`;
 
 let currentUser = null;
@@ -1157,12 +1163,19 @@ async function callAPI(userText) {
   try {
     const res = await fetch('/.netlify/functions/claude', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1000, system:SYSTEM, messages:msgs })
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        system: buildSystemPrompt(),
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: msgs
+      })
     });
     const data = await res.json();
     hideTyping();
     if (!res.ok) { msgs.pop(); addBubble('assistant','⚠️ API Error ('+res.status+'): '+(data.error?.message||'Unknown error')); busy=false; return; }
-    const reply = data.content?.find(b=>b.type==='text')?.text || 'No response received.';
+    // Combine all text blocks (web search may return multiple)
+    const reply = (data.content || []).filter(b=>b.type==='text').map(b=>b.text).join('\n') || 'No response received.';
     msgs.push({role:'assistant', content:reply});
     addBubble('assistant', reply);
   } catch(e) { hideTyping(); addBubble('assistant','⚠️ Connection error: '+e.message); }
@@ -1883,37 +1896,62 @@ async function generateEmail() {
 
 // ── DIMS LOOKUP ──
 async function lookupDims() {
-  const input=document.getElementById('dims-input').value.trim();
-  if(!input)return;
-  const btn=document.querySelector('#v-docs .section-box:last-child .calc-btn');
-  btn.innerHTML='<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Looking up...'; btn.disabled=true;
-  document.getElementById('dims-result').style.display='none';
-  document.getElementById('dims-error').style.display='none';
-  const prompt=`A freight broker needs the standard transport dimensions for: "${input}"\nRespond ONLY with JSON:\n{"label":"Full item name","length":"e.g. 32' 6\\"","width":"e.g. 10' 4\\"","height":"e.g. 10' 8\\"","notes":"Any important transport note or empty string"}\nIf unrecognizable set label to "Unknown" and rest to "N/A".`;
+  const input = document.getElementById('dims-input').value.trim();
+  if (!input) return;
+  const btn = document.querySelector('#v-docs .section-box:last-child .calc-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Looking up...';
+  btn.disabled = true;
+  document.getElementById('dims-result').style.display = 'none';
+  document.getElementById('dims-error').style.display = 'none';
+
+  const prompt = 'A freight broker needs transport dimensions for: "' + input + '"\n\n' +
+    'Use web search to find exact specs if needed. Then respond ONLY with JSON (no markdown):\n' +
+    '{"label":"Full official name","length":"e.g. 32ft 6in","width":"e.g. 10ft 4in","height":"e.g. 10ft 8in","weight":"e.g. 47,000 lbs","confidence":"verified or estimated","notes":"Equipment type recommendation and permit/oversize notes"}\n\n' +
+    'Rules: ALWAYS give your best estimate — never refuse. If uncertain use typical specs for that model and set confidence to estimated. notes must include recommended trailer type (Dry Van, Flatbed, Step Deck, RGN, etc).';
+
   try {
-    const r=await apiCall({model:'claude-sonnet-4-5',max_tokens:300,messages:[{role:'user',content:prompt}]});
-    const data=await r.json();
-    const raw=data.content?.find(b=>b.type==='text')?.text||'';
-    const clean=raw.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
-    if(parsed.label==='Unknown'){
-      document.getElementById('dims-error').textContent='Could not find dimensions for "'+input+'". Try adding more detail — year, make, and model work best.';
-      document.getElementById('dims-error').style.display='block';
-    } else {
-      document.getElementById('dims-equip-label').textContent=parsed.label;
-      document.getElementById('dims-length').textContent=parsed.length;
-      document.getElementById('dims-width').textContent=parsed.width;
-      document.getElementById('dims-height').textContent=parsed.height;
-      const notesEl=document.getElementById('dims-notes');
-      if(parsed.notes){notesEl.textContent=parsed.notes;notesEl.style.display='block';}
-      else{notesEl.style.display='none';}
-      document.getElementById('dims-result').style.display='block';
+    const r = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 600,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await r.json();
+    const textBlock = data.content?.find(b => b.type === 'text');
+    const raw = textBlock?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(clean); }
+    catch(e) {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) { parsed = JSON.parse(match[0]); }
+      else { throw new Error('Could not parse response. Raw: ' + raw.slice(0,100)); }
     }
-  } catch(e){
-    document.getElementById('dims-error').textContent='Error: '+e.message;
-    document.getElementById('dims-error').style.display='block';
+    const isEstimated = (parsed.confidence || '').toLowerCase().includes('estimated');
+    const badge = isEstimated
+      ? '<span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--am-lt);color:var(--am);border:0.5px solid var(--am-mid);font-weight:600;margin-left:6px">⚠ Estimated</span>'
+      : '<span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--gn-lt);color:var(--gn);border:0.5px solid var(--gn);font-weight:600;margin-left:6px">✓ Verified</span>';
+    document.getElementById('dims-equip-label').innerHTML = (parsed.label || input) + badge;
+    document.getElementById('dims-length').textContent = parsed.length || '—';
+    document.getElementById('dims-width').textContent = parsed.width || '—';
+    document.getElementById('dims-height').textContent = parsed.height || '—';
+    const wr = document.getElementById('dims-weight-row');
+    if (wr) wr.textContent = parsed.weight || '—';
+    const notesEl = document.getElementById('dims-notes');
+    if (parsed.notes) {
+      notesEl.innerHTML = (isEstimated ? '<strong style="color:var(--am)">Estimated specs</strong> — verify before booking. ' : '') + parsed.notes;
+      notesEl.style.display = 'block';
+    } else { notesEl.style.display = 'none'; }
+    document.getElementById('dims-result').style.display = 'block';
+  } catch(e) {
+    document.getElementById('dims-error').textContent = 'Error: ' + e.message;
+    document.getElementById('dims-error').style.display = 'block';
   }
-  btn.innerHTML='<i class="ti ti-ruler-measure"></i>Look Up Dimensions'; btn.disabled=false;
+  btn.innerHTML = '<i class="ti ti-ruler-measure"></i>Look Up Dimensions';
+  btn.disabled = false;
 }
 
 // ── TOOL RESULT STYLES ──
