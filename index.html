@@ -3078,16 +3078,16 @@ function refreshMapMarkers() {
       const equipStr = c.equipment && c.equipment.length ? c.equipment.join(', ') : 'Not specified';
       const statusLabel = { approved:'✓ Approved', cp:'📋 Send CP', pending:'⏳ Pending', 'dnu-suggested':'🚩 DNU Suggested', dnu:'🚫 Do Not Use' }[c.status] || c.status;
       const infoContent = `
-        <div style="font-family:-apple-system,sans-serif;min-width:200px;max-width:260px">
-          <div style="font-size:13px;font-weight:600;margin-bottom:4px">${c.name}</div>
-          <div style="font-size:11px;color:#666;margin-bottom:6px">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}</div>
-          <div style="font-size:11px;margin-bottom:3px"><strong>Status:</strong> ${statusLabel}</div>
-          <div style="font-size:11px;margin-bottom:3px"><strong>Equipment:</strong> ${equipStr}</div>
-          <div style="font-size:11px;margin-bottom:3px"><strong>Home Base:</strong> ${c.homeBase}</div>
-          ${c.lanes ? `<div style="font-size:11px;margin-bottom:3px"><strong>Lanes:</strong> ${c.lanes}</div>` : ''}
-          ${c.dispatcher ? `<div style="font-size:11px;margin-bottom:3px"><strong>Dispatcher:</strong> ${c.dispatcher}</div>` : ''}
-          ${c.phone ? `<div style="font-size:11px;margin-bottom:3px"><strong>Phone:</strong> ${c.phone}</div>` : ''}
-          ${c.email ? `<div style="font-size:11px"><strong>Email:</strong> ${c.email}</div>` : ''}
+        <div style="font-family:-apple-system,sans-serif;min-width:200px;max-width:260px;background:#fff;color:#1a1917;padding:4px 2px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#1a1917">${c.name}</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px">MC# ${c.mc}${c.dot && c.dot !== '—' ? ' · DOT# '+c.dot : ''}</div>
+          <div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Status:</span> ${statusLabel}</div>
+          <div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Equipment:</span> ${equipStr}</div>
+          <div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Home Base:</span> ${c.homeBase}</div>
+          ${c.lanes ? `<div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Lanes:</span> ${c.lanes}</div>` : ''}
+          ${c.dispatcher ? `<div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Dispatcher:</span> ${c.dispatcher}</div>` : ''}
+          ${c.phone ? `<div style="font-size:11px;color:#374151;margin-bottom:4px"><span style="font-weight:600;color:#1a1917">Phone:</span> ${c.phone}</div>` : ''}
+          ${c.email ? `<div style="font-size:11px;color:#374151"><span style="font-weight:600;color:#1a1917">Email:</span> ${c.email}</div>` : ''}
         </div>`;
 
       marker.addListener('click', () => {
