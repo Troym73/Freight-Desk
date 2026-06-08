@@ -401,6 +401,7 @@ table.bt td.red{color:var(--rd)}
     <button class="nb" onclick="nav('quotes')" id="n-quotes"><i class="ti ti-chart-bar"></i>My Quotes</button>
     <button class="nb" onclick="nav('carriers')" id="n-carriers"><i class="ti ti-truck-delivery"></i>Carriers</button>
     <button class="nb" onclick="nav('leads')" id="n-leads"><i class="ti ti-bulb"></i>Lead Generator</button>
+    <button class="nb" onclick="nav('od')" id="n-od"><i class="ti ti-alert-triangle"></i>OD &amp; Permits</button>
     <button class="nb" id="n-admin" onclick="nav('admin')" style="display:none"><i class="ti ti-shield-check"></i>Admin Dashboard</button>
 
     <div style="flex:1;overflow-y:auto">
@@ -903,6 +904,38 @@ table.bt td.red{color:var(--rd)}
       <div id="leads-empty" class="leads-empty">
         <i class="ti ti-bulb"></i>
         Select a commodity and city above, then click Generate Leads to find potential shippers in that area.
+      </div>
+    </div>
+
+    <!-- OD & PERMITS TAB -->
+    <div class="view" id="v-od">
+      <h1 style="font-size:17px;font-weight:600;margin-bottom:16px"><i class="ti ti-alert-triangle" style="color:var(--am);margin-right:6px"></i>OD &amp; Permits</h1>
+      <div class="section-box">
+        <h3><i class="ti ti-ruler-measure"></i>Load Dimensions &amp; Route</h3>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Length (ft)</label><input type="number" id="od-length" placeholder="e.g. 75" step="0.1" oninput="odCheckThresholds()"></div>
+          <div class="field"><label>Width (ft)</label><input type="number" id="od-width" placeholder="e.g. 14" step="0.1" oninput="odCheckThresholds()"></div>
+          <div class="field"><label>Height (ft)</label><input type="number" id="od-height" placeholder="e.g. 14.5" step="0.1" oninput="odCheckThresholds()"></div>
+          <div class="field"><label>Total Weight (lbs)</label><input type="number" id="od-weight" placeholder="e.g. 95000" oninput="odCheckThresholds()"></div>
+          <div class="field"><label>Pickup City, State</label><input type="text" id="od-origin" placeholder="e.g. Chicago, IL"></div>
+          <div class="field"><label>Delivery City, State</label><input type="text" id="od-dest" placeholder="e.g. Houston, TX"></div>
+        </div>
+        <div id="od-flags" style="margin-bottom:10px"></div>
+        <button class="calc-btn" onclick="generateODReport()" id="od-btn">
+          <i class="ti ti-sparkles"></i>Generate OD Permit Report
+        </button>
+      </div>
+      <div id="od-results" style="display:none">
+        <div class="od-summary-bar" id="od-summary"></div>
+        <div id="od-state-list"></div>
+        <div class="section-box" style="margin-top:14px">
+          <h3><i class="ti ti-clipboard-check"></i>Pre-Move Checklist</h3>
+          <div id="od-checklist-items"></div>
+        </div>
+      </div>
+      <div id="od-empty" style="text-align:center;padding:48px 20px;color:var(--tx3)">
+        <i class="ti ti-route" style="font-size:40px;margin-bottom:12px;display:block"></i>
+        Enter load dimensions and route above, then click Generate OD Permit Report.
       </div>
     </div>
 
@@ -2652,6 +2685,143 @@ async function draftLeadEmail(i) {
     const data = await r.json();
     emailBody.textContent = data.content?.find(b => b.type === 'text')?.text || 'Error generating email.';
   } catch(e) { emailBody.textContent = 'Error: ' + e.message; }
+}
+
+
+// ── OD & PERMITS ──
+const OD_FEDERAL = { maxWidth: 8.5, maxHeight: 13.5, maxLength: 53, maxWeight: 80000 };
+
+function odCheckThresholds() {
+  const len = parseFloat(document.getElementById('od-length').value) || 0;
+  const wid = parseFloat(document.getElementById('od-width').value) || 0;
+  const hgt = parseFloat(document.getElementById('od-height').value) || 0;
+  const wgt = parseFloat(document.getElementById('od-weight').value) || 0;
+  const flags = [];
+  if (wid > OD_FEDERAL.maxWidth) flags.push({ level:'warn', msg: 'Width ' + wid + 'ft exceeds federal 8ft 6in limit — OVERSIZE WIDTH' });
+  if (hgt > OD_FEDERAL.maxHeight) flags.push({ level:'warn', msg: 'Height ' + hgt + 'ft exceeds federal 13ft 6in limit — OVERSIZE HEIGHT' });
+  if (len > OD_FEDERAL.maxLength) flags.push({ level:'warn', msg: 'Length ' + len + 'ft exceeds federal 53ft limit — OVERSIZE LENGTH' });
+  if (wgt > OD_FEDERAL.maxWeight) flags.push({ level:'warn', msg: 'Weight ' + wgt.toLocaleString() + ' lbs exceeds federal 80,000 lb limit — OVERWEIGHT' });
+  if (wid > 16) flags.push({ level:'warn', msg: 'Width over 16ft — superload territory, route survey likely required' });
+  if (hgt > 16) flags.push({ level:'warn', msg: 'Height over 16ft — superload, bridge clearance survey required' });
+  if (wgt > 150000) flags.push({ level:'warn', msg: 'Weight over 150,000 lbs — superload permits required in most states' });
+  const container = document.getElementById('od-flags');
+  if (!flags.length) { container.innerHTML = ''; return; }
+  container.innerHTML = flags.map(f =>
+    '<div class="od-flag"><i class="ti ti-alert-triangle"></i><span>' + f.msg + '</span></div>'
+  ).join('');
+}
+
+async function generateODReport() {
+  const len = parseFloat(document.getElementById('od-length').value) || 0;
+  const wid = parseFloat(document.getElementById('od-width').value) || 0;
+  const hgt = parseFloat(document.getElementById('od-height').value) || 0;
+  const wgt = parseFloat(document.getElementById('od-weight').value) || 0;
+  const origin = document.getElementById('od-origin').value.trim();
+  const dest = document.getElementById('od-dest').value.trim();
+
+  if (!len && !wid && !hgt && !wgt) { alert('Please enter at least one dimension or weight.'); return; }
+  if (!origin || !dest) { alert('Please enter both pickup and delivery locations.'); return; }
+
+  const btn = document.getElementById('od-btn');
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Getting route & generating report...';
+  btn.disabled = true;
+  document.getElementById('od-results').style.display = 'none';
+  document.getElementById('od-empty').style.display = 'none';
+
+  try {
+    // Step 1: Get route from Google Maps to find states
+    const mapsRes = await fetch('/.netlify/functions/maps', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'route_states', origin, destination: dest })
+    });
+    const mapsText = await mapsRes.text();
+    let mapsData;
+    try { mapsData = JSON.parse(mapsText); } catch(e) { mapsData = {}; }
+
+    const states = mapsData.states || [];
+    const miles = mapsData.miles || 0;
+    const statesStr = states.length ? states.join(', ') : 'unknown states';
+
+    // Step 2: AI generates permit requirements per state
+    const odPrompt = 'You are an OD (overdimensional) freight permit expert. A load is moving from ' + origin + ' to ' + dest + '.\n\n' +
+      'Load specs:\n' +
+      (len ? '- Length: ' + len + ' ft\n' : '') +
+      (wid ? '- Width: ' + wid + ' ft\n' : '') +
+      (hgt ? '- Height: ' + hgt + ' ft\n' : '') +
+      (wgt ? '- Weight: ' + wgt.toLocaleString() + ' lbs\n' : '') +
+      '\nRoute passes through these states: ' + statesStr + '\n\n' +
+      'For each state, provide OD permit requirements. Respond ONLY with a JSON object (no markdown):\n' +
+      '{"summary":{"totalStates":N,"statesNeedingPermits":N,"escortRequired":true,"superload":false},' +
+      '"states":[{"state":"Name","abbr":"XX","permitRequired":true,"severity":"permit","permitType":"Single Trip OD","escorts":"1 Lead Car","travelRestrictions":"Daylight only","notes":"Any notes"}],' +
+      '"checklist":["Item 1","Item 2"]}';
+
+    const aiRes = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 3000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: odPrompt }]
+      })
+    });
+    const aiText = await aiRes.text();
+    let aiData;
+    try { aiData = JSON.parse(aiText); } catch(e) { aiData = {}; }
+    const raw = (aiData.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    let report;
+    try {
+      const match = clean.match(/\{[\s\S]*\}/);
+      report = JSON.parse(match ? match[0] : clean);
+    } catch(e) {
+      document.getElementById('od-empty').innerHTML = '<i class="ti ti-alert-circle" style="font-size:40px;margin-bottom:12px;display:block;color:var(--rd)"></i>Error parsing report. Try again.';
+      document.getElementById('od-empty').style.display = 'block';
+      btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate OD Permit Report'; btn.disabled = false;
+      return;
+    }
+
+    // ── Render summary ──
+    const sum = report.summary || {};
+    document.getElementById('od-summary').innerHTML =
+      '<div class="dash-metric"><div class="dm-label">States on Route</div><div class="dm-val">' + (sum.totalStates || states.length) + '</div></div>' +
+      '<div class="dash-metric"><div class="dm-label">Need Permits</div><div class="dm-val amber">' + (sum.statesNeedingPermits || '?') + '</div></div>' +
+      '<div class="dash-metric"><div class="dm-label">Escort Required</div><div class="dm-val" style="color:' + (sum.escortRequired ? 'var(--rd)' : 'var(--gn)') + '">' + (sum.escortRequired ? 'Yes' : 'No') + '</div></div>' +
+      '<div class="dash-metric"><div class="dm-label">Superload</div><div class="dm-val" style="color:' + (sum.superload ? 'var(--rd)' : 'var(--gn)') + '">' + (sum.superload ? 'Yes' : 'No') + '</div></div>';
+
+    // ── Render state cards ──
+    const stateList = document.getElementById('od-state-list');
+    stateList.innerHTML = (report.states || []).map(s => {
+      const badgeClass = s.severity === 'superload' ? 'od-badge-warn' : s.permitRequired ? 'od-badge-permit' : 'od-badge-clear';
+      const badgeText = s.severity === 'superload' ? '⚠ Superload' : s.permitRequired ? '📋 Permit Required' : '✓ No Permit';
+      return '<div class="od-state-card">' +
+        '<div class="od-state-header">' +
+          '<div class="od-state-name">' + s.state + '</div>' +
+          '<span class="od-state-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '</div>' +
+        (s.permitRequired ? (
+          '<div class="od-detail-row"><i class="ti ti-file-text info"></i><span><strong>Permit:</strong> ' + (s.permitType || '—') + '</span></div>' +
+          '<div class="od-detail-row"><i class="ti ti-car info"></i><span><strong>Escorts:</strong> ' + (s.escorts || 'None') + '</span></div>' +
+          '<div class="od-detail-row"><i class="ti ti-clock warn"></i><span><strong>Travel restrictions:</strong> ' + (s.travelRestrictions || 'None noted') + '</span></div>'
+        ) : '') +
+        (s.notes ? '<div class="od-detail-row"><i class="ti ti-info-circle info"></i><span>' + s.notes + '</span></div>' : '') +
+        '</div>';
+    }).join('');
+
+    // ── Render checklist ──
+    const checkItems = document.getElementById('od-checklist-items');
+    checkItems.innerHTML = (report.checklist || []).map((item, i) =>
+      '<div class="od-check-item"><input type="checkbox" id="od-chk-' + i + '"><label for="od-chk-' + i + '" style="cursor:pointer">' + item + '</label></div>'
+    ).join('');
+
+    document.getElementById('od-results').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('od-empty').innerHTML = '<i class="ti ti-alert-circle" style="font-size:40px;margin-bottom:12px;display:block;color:var(--rd)"></i>Error: ' + e.message;
+    document.getElementById('od-empty').style.display = 'block';
+  }
+
+  btn.innerHTML = '<i class="ti ti-sparkles"></i>Generate OD Permit Report';
+  btn.disabled = false;
 }
 
 </script>
