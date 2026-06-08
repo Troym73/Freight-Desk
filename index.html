@@ -363,6 +363,23 @@ table.bt td.red{color:var(--rd)}
 .map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--tx3);font-size:13px}
 .map-no-homebases{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--tx3);font-size:13px;text-align:center;padding:20px}
 
+/* ── QUOTE TEMPLATES ── */
+.template-carousel{position:relative;margin-bottom:14px}
+.template-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.template-card{background:var(--sf2);border:0.5px solid var(--bd);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .12s}
+.template-card:hover{border-color:var(--am-mid)}
+.template-card-lane{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.template-card-sub{font-size:11px;color:var(--tx2);margin-bottom:2px}
+.template-card-meta{font-size:11px;color:var(--tx3);margin-bottom:8px}
+.template-nav{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.template-nav-btn{background:var(--sf2);border:0.5px solid var(--bd2);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);font-size:14px}
+.template-nav-btn:hover{background:var(--sf3);color:var(--tx)}
+.template-nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+.template-dots{display:flex;gap:5px;align-items:center}
+.template-dot{width:6px;height:6px;border-radius:50%;background:var(--bd2);transition:background .15s}
+.template-dot.active{background:var(--am)}
+.template-empty{font-size:12px;color:var(--tx3);padding:10px 0;display:flex;align-items:center;gap:6px}
+
 /* ── MODAL ── */
 #modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
 #modal-bg.show{display:flex}
@@ -514,6 +531,17 @@ table.bt td.red{color:var(--rd)}
         <div class="ai-result" id="ai-result">
           <div class="ar-head"><i class="ti ti-sparkles"></i>AI Quote Recommendation</div>
           <div class="ar-body" id="ai-result-body"></div>
+        </div>
+
+        <!-- Quick Quote Templates -->
+        <div class="section-box" id="templates-box" style="margin-bottom:14px">
+          <h3 style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-bookmark"></i>Quick Quote Templates</span>
+            <span style="font-size:11px;color:var(--tx3);font-weight:400" id="template-count-label"></span>
+          </h3>
+          <div id="templates-container">
+            <div class="template-empty"><i class="ti ti-bookmark" style="font-size:14px"></i>No templates yet — fill out a quote and click Save as Template.</div>
+          </div>
         </div>
 
         <!-- Load Details with Google Maps + Multi-stop -->
@@ -681,6 +709,9 @@ table.bt td.red{color:var(--rd)}
           </button>
           <button class="calc-btn" onclick="saveQuote()" style="margin-bottom:8px;background:var(--gn);color:#fff;border:none">
             <i class="ti ti-device-floppy"></i>Save Quote
+          </button>
+          <button class="calc-btn" onclick="saveAsTemplate()" style="margin-bottom:8px;background:var(--sf2);color:var(--tx);border:0.5px solid var(--bd2)">
+            <i class="ti ti-bookmark-plus"></i>Save as Template
           </button>
           <button class="calc-btn" onclick="getAIQuote()">
             <i class="ti ti-sparkles"></i>Get AI Quote Recommendation
@@ -1189,6 +1220,7 @@ async function loadApp(user) {
 
   loadMyQuotes();
   loadCarriers();
+  loadTemplates();
   if (isAdmin) loadAdminDashboard();
   setupRealtime();
 }
@@ -3125,6 +3157,130 @@ const darkMapStyle = [
   {featureType:'administrative',elementType:'geometry',stylers:[{color:'#757575'}]},
   {featureType:'poi',stylers:[{visibility:'off'}]}
 ];
+
+
+// ── QUICK QUOTE TEMPLATES ──
+let quoteTemplates = [];
+let templatePage = 0;
+const TEMPLATES_PER_PAGE = 3;
+
+async function loadTemplates() {
+  if (!currentUser) return;
+  const { data, error } = await sb.from('quote_templates').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  if (error) { if (error.code !== '42P01') console.error('Templates:', error.message); return; }
+  quoteTemplates = data || [];
+  templatePage = 0;
+  renderTemplates();
+}
+
+function renderTemplates() {
+  const container = document.getElementById('templates-container');
+  const label = document.getElementById('template-count-label');
+  if (!container) return;
+
+  if (!quoteTemplates.length) {
+    container.innerHTML = '<div class="template-empty"><i class="ti ti-bookmark" style="font-size:14px"></i>No templates yet — fill out a quote and click Save as Template.</div>';
+    if (label) label.textContent = '';
+    return;
+  }
+
+  const total = quoteTemplates.length;
+  const totalPages = Math.ceil(total / TEMPLATES_PER_PAGE);
+  const start = templatePage * TEMPLATES_PER_PAGE;
+  const page = quoteTemplates.slice(start, start + TEMPLATES_PER_PAGE);
+
+  if (label) label.textContent = total + ' saved';
+
+  const cards = page.map(t => `
+    <div class="template-card" onclick="loadTemplate('${t.id}')">
+      <div class="template-card-lane">${t.name || t.lane}</div>
+      <div class="template-card-sub">${t.equipment}${t.miles ? ' · ' + t.miles + ' mi' : ''}</div>
+      <div class="template-card-meta">${t.margin_pct}% margin${t.fsc ? ' · $' + t.fsc + ' FSC' : ''}</div>
+      <div style="display:flex;gap:5px">
+        <button onclick="event.stopPropagation();loadTemplate('${t.id}')" style="flex:1;font-size:11px;padding:4px 0;background:var(--am);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:500">Load</button>
+        <button onclick="event.stopPropagation();deleteTemplate('${t.id}')" style="font-size:11px;padding:4px 7px;background:none;border:0.5px solid var(--bd2);border-radius:6px;cursor:pointer;color:var(--tx3)"><i class="ti ti-trash" style="font-size:12px"></i></button>
+      </div>
+    </div>`).join('');
+
+  const dots = totalPages > 1 ? Array.from({length: totalPages}, (_, i) =>
+    `<div class="template-dot ${i === templatePage ? 'active' : ''}"></div>`
+  ).join('') : '';
+
+  const nav = totalPages > 1 ? `
+    <div class="template-nav">
+      <button class="template-nav-btn" onclick="templatePageChange(-1)" ${templatePage === 0 ? 'disabled' : ''}><i class="ti ti-chevron-left"></i></button>
+      <div class="template-dots">${dots}</div>
+      <button class="template-nav-btn" onclick="templatePageChange(1)" ${templatePage >= totalPages - 1 ? 'disabled' : ''}><i class="ti ti-chevron-right"></i></button>
+    </div>` : '';
+
+  container.innerHTML = `<div class="template-cards">${cards}</div>${nav}`;
+}
+
+function templatePageChange(dir) {
+  const totalPages = Math.ceil(quoteTemplates.length / TEMPLATES_PER_PAGE);
+  templatePage = Math.max(0, Math.min(totalPages - 1, templatePage + dir));
+  renderTemplates();
+}
+
+async function saveAsTemplate() {
+  if (!lastQuoteData) { alert('Calculate a quote first.'); return; }
+  const pu = document.getElementById('loc-pu').value.trim();
+  const del = document.getElementById('loc-del').value.trim();
+  if (!pu || !del) { alert('Please enter pickup and delivery cities first.'); return; }
+  const defaultName = (pu.split(',')[0].trim().toUpperCase().slice(0,3)) + ' → ' + (del.split(',')[0].trim().toUpperCase().slice(0,3));
+  const name = prompt('Template name:', defaultName);
+  if (!name) return;
+  const { error } = await sb.from('quote_templates').insert([{
+    user_id: currentUser.id,
+    name,
+    lane: lastQuoteData.lane,
+    equipment: lastQuoteData.equipment,
+    miles: lastQuoteData.miles || null,
+    margin_pct: lastQuoteData.margin_pct,
+    fsc: parseFloat(document.getElementById('fsc').value) || null,
+    acc: parseFloat(document.getElementById('acc').value) || null,
+    origin: pu,
+    destination: del,
+    created_at: new Date().toISOString()
+  }]);
+  if (error) {
+    if (error.code === '42P01') {
+      alert('Templates table not set up yet. Run the SQL in Supabase first.');
+    } else {
+      alert('Error saving template: ' + error.message);
+    }
+    return;
+  }
+  await loadTemplates();
+  alert('Template saved!');
+}
+
+async function loadTemplate(id) {
+  const t = quoteTemplates.find(x => x.id === id);
+  if (!t) return;
+  if (t.origin) document.getElementById('loc-pu').value = t.origin;
+  if (t.destination) document.getElementById('loc-del').value = t.destination;
+  if (t.miles) document.getElementById('miles').value = t.miles;
+  if (t.margin_pct) document.getElementById('margin').value = t.margin_pct;
+  if (t.fsc) document.getElementById('fsc').value = t.fsc;
+  if (t.acc) document.getElementById('acc').value = t.acc;
+  // Match equipment
+  const equipSel = document.getElementById('equip');
+  if (equipSel && t.equipment) {
+    for (const opt of equipSel.options) {
+      if (opt.text === t.equipment) { equipSel.value = opt.value; break; }
+    }
+  }
+  // Auto-get miles if origin/dest set
+  if (t.origin && t.destination) autoGetMiles();
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  const { error } = await sb.from('quote_templates').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await loadTemplates();
+}
 
 </script>
 </body>
