@@ -633,12 +633,13 @@ table.bt td.red{color:var(--rd)}
             </div>
             <div id="dat-parse-result" style="display:none;font-size:11px;margin-top:6px;padding:5px 10px;border-radius:6px"></div>
           </div>
-          <div class="dat-row">
-            <div class="field"><label>7-Day $</label><input type="number" id="d30" step="1" placeholder="e.g. 1750"></div>
-            <div class="field"><label>15-Day $</label><input type="number" id="d60" step="1" placeholder="e.g. 1727"></div>
-            <div class="field"><label>90-Day $</label><input type="number" id="d1y" step="1" placeholder="e.g. 1850"></div>
-            <div class="field"><label>1-Year $</label><input type="number" id="d13m" step="1" placeholder="e.g. 1921"></div>
-            <div class="field"><label>35D Forecast $</label><input type="number" id="d35f" step="1" placeholder="e.g. 1676"></div>
+          <div class="dat-row" style="grid-template-columns:repeat(6,1fr)">
+            <div class="field"><label>3-Day $</label><input type="number" id="d3" step="1" placeholder="e.g. 1800" oninput="autoCalc()"></div>
+            <div class="field"><label>7-Day $</label><input type="number" id="d30" step="1" placeholder="e.g. 1750" oninput="autoCalc()"></div>
+            <div class="field"><label>15-Day $</label><input type="number" id="d60" step="1" placeholder="e.g. 1727" oninput="autoCalc()"></div>
+            <div class="field"><label>90-Day $</label><input type="number" id="d1y" step="1" placeholder="e.g. 1850" oninput="autoCalc()"></div>
+            <div class="field"><label>1-Year $</label><input type="number" id="d13m" step="1" placeholder="e.g. 1921" oninput="autoCalc()"></div>
+            <div class="field"><label>35D Forecast $</label><input type="number" id="d35f" step="1" placeholder="e.g. 1676" oninput="autoCalc()"></div>
           </div>
           <div id="trend-display" style="margin-top:12px;display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
@@ -1525,18 +1526,21 @@ function updateBlendDisplay() {
 }
 
 function getDatAvg() {
-  const d30=parseFloat(document.getElementById('d30').value)||0;
-  const d60=parseFloat(document.getElementById('d60').value)||0;
-  const d1y=parseFloat(document.getElementById('d1y').value)||0;
-  const d13m=parseFloat(document.getElementById('d13m').value)||0;
-  const d35f=parseFloat(document.getElementById('d35f').value)||0;
-  const vals=[d30,d60,d1y,d13m,d35f].filter(v=>v>0);
-  if(!vals.length) return 0;
-  const basis=document.getElementById('rate-basis').value;
-  if(basis==='w30') return d30||vals.reduce((a,b)=>a+b,0)/vals.length;
-  if(basis==='w1y') return d13m||vals.reduce((a,b)=>a+b,0)/vals.length;
-  if(basis==='f13m') return d35f||vals.reduce((a,b)=>a+b,0)/vals.length;
-  return vals.reduce((a,b)=>a+b,0)/vals.length;
+  const d3  = parseFloat(document.getElementById('d3')?.value)  || 0;
+  const d30  = parseFloat(document.getElementById('d30').value)  || 0;
+  const d60  = parseFloat(document.getElementById('d60').value)  || 0;
+  const d1y  = parseFloat(document.getElementById('d1y').value)  || 0;
+  const d13m = parseFloat(document.getElementById('d13m').value) || 0;
+  const d35f = parseFloat(document.getElementById('d35f').value) || 0;
+  // Only average the fields that actually have data
+  const vals = [d3, d30, d60, d1y, d13m, d35f].filter(v => v > 0);
+  if (!vals.length) return 0;
+  const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+  const basis = document.getElementById('rate-basis').value;
+  if (basis === 'w30')  return d30  || avg;
+  if (basis === 'w1y')  return d13m || avg;
+  if (basis === 'f13m') return d35f || avg;
+  return avg;
 }
 
 // ── RATE CALC ──
@@ -1555,6 +1559,7 @@ function autoCalc() {
   const fsc=parseFloat(document.getElementById('fsc').value)||0;
   const acc=parseFloat(document.getElementById('acc').value)||0;
   const marginPct=parseFloat(document.getElementById('margin').value);
+  const d3=parseFloat(document.getElementById('d3')?.value)||0;
   const d30=parseFloat(document.getElementById('d30').value)||0;
   const d60=parseFloat(document.getElementById('d60').value)||0;
   const d1y=parseFloat(document.getElementById('d1y').value)||0;
@@ -1568,7 +1573,7 @@ function autoCalc() {
     if (fee) stopCharges += parseFloat(fee.value) || 0;
   }
 
-  const vals=[d30,d60,d1y,d13m,d35f].filter(v=>v>0);
+  const vals=[d3,d30,d60,d1y,d13m,d35f].filter(v=>v>0);
   const trendDiv=document.getElementById('trend-display');
   if(vals.length>=2){
     trendDiv.style.display='block';
@@ -3320,23 +3325,25 @@ async function deleteTemplate(id) {
 
 // ── DAT PASTE PARSER ──
 function parseDATBlock(text) {
-  const result = { d7: null, d15: null, d90: null, d1y: null, d35f: null };
+  const result = { d3: null, d7: null, d15: null, d90: null, d1y: null, d35f: null };
   if (!text || !text.trim()) return result;
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lower = line.toLowerCase();
+    const is3day  = lower.includes('3 day')  || lower.includes('3-day');
     const is7day  = lower.includes('7 day')  || lower.includes('7-day');
     const is15day = lower.includes('15 day') || lower.includes('15-day');
     const is90day = lower.includes('90 day') || lower.includes('90-day');
     const is1year = lower.includes('1 year') || lower.includes('1-year');
     const is35d   = lower.includes('35d') || lower.includes('35 d') || lower.includes('forecast');
-    if (is7day || is15day || is90day || is1year || is35d) {
+    if (is3day || is7day || is15day || is90day || is1year || is35d) {
       for (let j = i; j < Math.min(i + 4, lines.length); j++) {
         if (j === i && !lines[j].includes('$')) continue;
         const match = lines[j].match(/\$([0-9,]+)/);
         if (match) {
           const val = parseFloat(match[1].replace(/,/g, ''));
+          if (is3day)  result.d3  = result.d3  || val;
           if (is7day)  result.d7  = result.d7  || val;
           if (is15day) result.d15 = result.d15 || val;
           if (is90day) result.d90 = result.d90 || val;
@@ -3361,13 +3368,14 @@ function parseDATFromPaste() {
   const text = document.getElementById('dat-paste').value;
   const result = parseDATBlock(text);
   const filled = [];
-  const skipped = [];
 
-  if (result.d7)   { document.getElementById('d30').value = result.d7;   filled.push('7-day'); }   else skipped.push('7-day');
-  if (result.d15)  { document.getElementById('d60').value = result.d15;  filled.push('15-day'); }  else skipped.push('15-day');
-  if (result.d90)  { document.getElementById('d1y').value = result.d90;  filled.push('90-day'); }  else skipped.push('90-day');
-  if (result.d1y)  { document.getElementById('d13m').value = result.d1y; filled.push('1-year'); }  else skipped.push('1-year');
-  if (result.d35f) { document.getElementById('d35f').value = result.d35f; filled.push('35D forecast'); } else skipped.push('35D forecast');
+  if (result.d3)   { document.getElementById('d3').value = result.d3;     filled.push('3-day'); }
+  if (result.d7)   { document.getElementById('d30').value = result.d7;   filled.push('7-day'); }
+  if (result.d15)  { document.getElementById('d60').value = result.d15;  filled.push('15-day'); }
+  if (result.d90)  { document.getElementById('d1y').value = result.d90;  filled.push('90-day'); }
+  if (result.d1y)  { document.getElementById('d13m').value = result.d1y; filled.push('1-year'); }
+  if (result.d35f) { document.getElementById('d35f').value = result.d35f; filled.push('35D forecast'); }
+  const skipped = ['3-day','7-day','15-day','90-day','1-year','35D forecast'].filter(p => !filled.includes(p));
 
   const resultEl = document.getElementById('dat-parse-result');
   if (!filled.length) {
