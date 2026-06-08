@@ -625,6 +625,14 @@ table.bt td.red{color:var(--rd)}
         <!-- DAT -->
         <div class="section-box">
           <h3><i class="ti ti-chart-line"></i>DAT RateView</h3>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:5px"><i class="ti ti-clipboard" style="font-size:13px;color:var(--am)"></i>Paste DAT data</div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <textarea id="dat-paste" placeholder="Copy all rate data from DAT and paste here — all fields fill automatically" style="flex:1;height:56px;resize:none;background:var(--sf2);border:0.5px solid var(--am-mid);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--tx);font-family:inherit;outline:none;line-height:1.4" oninput="autoParseDATOnInput(this)"></textarea>
+              <button onclick="parseDATFromPaste()" style="padding:8px 14px;background:var(--am);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:stretch"><i class="ti ti-sparkles" style="margin-right:4px"></i>Auto-fill</button>
+            </div>
+            <div id="dat-parse-result" style="display:none;font-size:11px;margin-top:6px;padding:5px 10px;border-radius:6px"></div>
+          </div>
           <div class="dat-row">
             <div class="field"><label>7-Day $</label><input type="number" id="d30" step="1" placeholder="e.g. 1750"></div>
             <div class="field"><label>15-Day $</label><input type="number" id="d60" step="1" placeholder="e.g. 1727"></div>
@@ -3307,6 +3315,81 @@ async function deleteTemplate(id) {
   const { error } = await sb.from('quote_templates').delete().eq('id', id);
   if (error) { alert('Error: ' + error.message); return; }
   await loadTemplates();
+}
+
+
+// ── DAT PASTE PARSER ──
+function parseDATBlock(text) {
+  const result = { d7: null, d15: null, d90: null, d1y: null, d35f: null };
+  if (!text || !text.trim()) return result;
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lower = line.toLowerCase();
+    const is7day  = lower.includes('7 day')  || lower.includes('7-day');
+    const is15day = lower.includes('15 day') || lower.includes('15-day');
+    const is90day = lower.includes('90 day') || lower.includes('90-day');
+    const is1year = lower.includes('1 year') || lower.includes('1-year');
+    const is35d   = lower.includes('35d') || lower.includes('35 d') || lower.includes('forecast');
+    if (is7day || is15day || is90day || is1year || is35d) {
+      for (let j = i; j < Math.min(i + 4, lines.length); j++) {
+        if (j === i && !lines[j].includes('$')) continue;
+        const match = lines[j].match(/\$([0-9,]+)/);
+        if (match) {
+          const val = parseFloat(match[1].replace(/,/g, ''));
+          if (is7day)  result.d7  = result.d7  || val;
+          if (is15day) result.d15 = result.d15 || val;
+          if (is90day) result.d90 = result.d90 || val;
+          if (is1year) result.d1y = result.d1y || val;
+          if (is35d)   result.d35f = result.d35f || val;
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function autoParseDATOnInput(el) {
+  // Auto-parse as soon as user pastes (paste event fires before oninput)
+  if (el.value.includes('Day') || el.value.includes('Forecast') || el.value.includes('Year')) {
+    parseDATFromPaste();
+  }
+}
+
+function parseDATFromPaste() {
+  const text = document.getElementById('dat-paste').value;
+  const result = parseDATBlock(text);
+  const filled = [];
+  const skipped = [];
+
+  if (result.d7)   { document.getElementById('d30').value = result.d7;   filled.push('7-day'); }   else skipped.push('7-day');
+  if (result.d15)  { document.getElementById('d60').value = result.d15;  filled.push('15-day'); }  else skipped.push('15-day');
+  if (result.d90)  { document.getElementById('d1y').value = result.d90;  filled.push('90-day'); }  else skipped.push('90-day');
+  if (result.d1y)  { document.getElementById('d13m').value = result.d1y; filled.push('1-year'); }  else skipped.push('1-year');
+  if (result.d35f) { document.getElementById('d35f').value = result.d35f; filled.push('35D forecast'); } else skipped.push('35D forecast');
+
+  const resultEl = document.getElementById('dat-parse-result');
+  if (!filled.length) {
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'var(--rd-lt)';
+    resultEl.style.color = 'var(--rd)';
+    resultEl.textContent = 'Could not find DAT rates — make sure you copied the full rate block from DAT.';
+    return;
+  }
+
+  resultEl.style.display = 'block';
+  resultEl.style.background = 'var(--gn-lt)';
+  resultEl.style.color = 'var(--gn)';
+  resultEl.innerHTML = '✓ Filled: ' + filled.join(', ') +
+    (skipped.length ? ' &nbsp;·&nbsp; <span style="color:var(--tx3)">Not available: ' + skipped.join(', ') + '</span>' : '');
+
+  // Clear paste box and auto-calculate
+  document.getElementById('dat-paste').value = '';
+  autoCalc();
+
+  // Hide result after 4 seconds
+  setTimeout(() => { resultEl.style.display = 'none'; }, 4000);
 }
 
 </script>
