@@ -42,7 +42,7 @@ exports.handler = async function(event, context) {
       return { statusCode: 200, headers, body: JSON.stringify({ miles }) };
     }
 
-    // ── ROUTE STATES (for OD & Permits) ──
+    // ── ROUTE STATES (for OD & Permits) — fast version ──
     if (body.type === 'route_states') {
       const origin = encodeURIComponent(body.origin || '');
       const destination = encodeURIComponent(body.destination || '');
@@ -51,45 +51,71 @@ exports.handler = async function(event, context) {
       let miles = 0;
       const stateSet = new Set();
 
+      // State abbreviation to full name map
+      const stateNames = {
+        'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California',
+        'CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia',
+        'HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas',
+        'KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts',
+        'MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana',
+        'NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico',
+        'NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma',
+        'OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina',
+        'SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont',
+        'VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'
+      };
+
       if (data.routes?.[0]) {
         const legs = data.routes[0].legs || [];
         miles = Math.round(legs.reduce((sum, leg) => sum + (leg.distance?.value || 0), 0) / 1609.34);
 
-        // Extract states from all steps in the route
-        for (const leg of legs) {
-          for (const step of (leg.steps || [])) {
-            // Get state from end location via reverse geocode
-            if (step.end_location) {
-              try {
-                const geo = await googleRequest(`/maps/api/geocode/json?latlng=${step.end_location.lat},${step.end_location.lng}&result_type=administrative_area_level_1&key=${KEY}`);
-                const stateComp = geo.results?.[0]?.address_components?.find(c => c.types.includes('administrative_area_level_1'));
-                if (stateComp) stateSet.add(stateComp.long_name);
-              } catch(e) { /* skip */ }
-            }
-          }
-        }
+        // Extract states from HTML instructions and addresses — no extra API calls needed
+        const allText = legs.map(leg =>
+          (leg.start_address || '') + ' ' +
+          (leg.end_address || '') + ' ' +
+          (leg.steps || []).map(s => s.html_instructions || '').join(' ')
+        ).join(' ');
 
-        // Also get start/end states from the summary
-        if (data.routes[0].legs[0]?.start_address) {
-          const startMatch = data.routes[0].legs[0].start_address.match(/,\s*([A-Z]{2})\s*\d/);
-          if (startMatch) {
-            const stateNames = { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming' };
-            if (stateNames[startMatch[1]]) stateSet.add(stateNames[startMatch[1]]);
+        // Also parse state abbreviations from addresses directly
+        const addresses = legs.map(l => [l.start_address, l.end_address]).flat().join(' ');
+        const abbrMatches = addresses.match(/,\s*([A-Z]{2})\s*(?:\d{5})?(?:,|$)/g) || [];
+        abbrMatches.forEach(m => {
+          const abbr = m.replace(/[^A-Z]/g, '').slice(-2);
+          if (stateNames[abbr]) stateSet.add(stateNames[abbr]);
+        });
+
+        // For long routes, sample waypoints along the route to get intermediate states
+        if (stateSet.size <= 2 && miles > 500) {
+          // Get a few sample points from the route steps
+          const allSteps = legs.flatMap(l => l.steps || []);
+          const sampleInterval = Math.floor(allSteps.length / 4);
+          const samplePoints = [];
+          for (let i = sampleInterval; i < allSteps.length; i += sampleInterval) {
+            if (allSteps[i]?.end_location) samplePoints.push(allSteps[i].end_location);
           }
+          // Geocode sample points in parallel
+          const geocodeResults = await Promise.all(
+            samplePoints.slice(0,4).map(pt =>
+              googleRequest(`/maps/api/geocode/json?latlng=${pt.lat},${pt.lng}&result_type=administrative_area_level_1&key=${KEY}`)
+                .catch(() => null)
+            )
+          );
+          geocodeResults.forEach(r => {
+            if (!r) return;
+            const comp = r.results?.[0]?.address_components?.find(c => c.types.includes('administrative_area_level_1'));
+            if (comp?.long_name) stateSet.add(comp.long_name);
+          });
         }
       }
 
-      // If we couldn't extract states from steps, fall back to AI-based state detection
-      // by just returning origin/dest states parsed from address
+      // Fallback: parse states from the input strings if still empty
       if (stateSet.size === 0) {
-        // Parse states from the address strings
-        const originStr = body.origin || '';
-        const destStr = body.destination || '';
-        const stateAbbrs = { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming' };
-        for (const [abbr, name] of Object.entries(stateAbbrs)) {
-          if (originStr.includes(abbr) || originStr.toLowerCase().includes(name.toLowerCase())) stateSet.add(name);
-          if (destStr.includes(abbr) || destStr.toLowerCase().includes(name.toLowerCase())) stateSet.add(name);
-        }
+        const combined = (body.origin || '') + ' ' + (body.destination || '');
+        Object.entries(stateNames).forEach(([abbr, name]) => {
+          if (combined.includes(' ' + abbr) || combined.toLowerCase().includes(name.toLowerCase())) {
+            stateSet.add(name);
+          }
+        });
       }
 
       return { statusCode: 200, headers, body: JSON.stringify({ states: [...stateSet], miles }) };
@@ -109,7 +135,7 @@ exports.handler = async function(event, context) {
       const searchData = await googleRequest(`/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${loc.lat},${loc.lng}&radius=${radius}&key=${KEY}`);
 
       if (searchData.status !== 'OK' && searchData.status !== 'ZERO_RESULTS') {
-        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Places API error: ' + searchData.status + ' — ' + (searchData.error_message || '') }) };
+        return { statusCode: 200, headers, body: JSON.stringify({ places: [], error: 'Places API error: ' + searchData.status }) };
       }
 
       const rawPlaces = (searchData.results || []).slice(0, 10);
