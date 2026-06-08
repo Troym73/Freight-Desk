@@ -3191,16 +3191,21 @@ function renderTemplates() {
 
   if (label) label.textContent = total + ' saved';
 
-  const cards = page.map(t => `
-    <div class="template-card" onclick="loadTemplate('${t.id}')">
+  const cards = page.map(t => {
+    const datVals = [t.dat_7day, t.dat_15day, t.dat_90day, t.dat_1year, t.dat_forecast].filter(v => v > 0);
+    const datAvg = datVals.length ? Math.round(datVals.reduce((a,b) => a+b, 0) / datVals.length) : null;
+    const rateStr = datAvg ? '$' + datAvg.toLocaleString() + ' avg DAT' : 'No rates saved';
+    return `<div class="template-card" onclick="loadTemplate('${t.id}')">
       <div class="template-card-lane">${t.name || t.lane}</div>
-      <div class="template-card-sub">${t.equipment}${t.miles ? ' · ' + t.miles + ' mi' : ''}</div>
+      <div class="template-card-sub">${t.equipment || '—'}${t.miles ? ' · ' + t.miles + ' mi' : ''}</div>
+      <div class="template-card-meta" style="color:var(--am);font-weight:500">${rateStr}</div>
       <div class="template-card-meta">${t.margin_pct}% margin${t.fsc ? ' · $' + t.fsc + ' FSC' : ''}</div>
-      <div style="display:flex;gap:5px">
+      <div style="display:flex;gap:5px;margin-top:6px">
         <button onclick="event.stopPropagation();loadTemplate('${t.id}')" style="flex:1;font-size:11px;padding:4px 0;background:var(--am);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:500">Load</button>
         <button onclick="event.stopPropagation();deleteTemplate('${t.id}')" style="font-size:11px;padding:4px 7px;background:none;border:0.5px solid var(--bd2);border-radius:6px;cursor:pointer;color:var(--tx3)"><i class="ti ti-trash" style="font-size:12px"></i></button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   const dots = totalPages > 1 ? Array.from({length: totalPages}, (_, i) =>
     `<div class="template-dot ${i === templatePage ? 'active' : ''}"></div>`
